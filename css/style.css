@@ -861,7 +861,8 @@ h3 {
     top: var(--nav-height);
     left: 0;
     right: 0;
-    bottom: 0;
+    height: calc(100vh - var(--nav-height));
+    z-index: 200;
     background: var(--color-bg);
     flex-direction: column;
     align-items: center;
@@ -870,6 +871,7 @@ h3 {
     gap: 24px;
     transform: translateX(100%);
     transition: transform 0.3s ease;
+    overflow-y: auto;
   }
 
   .nav__links.active {
