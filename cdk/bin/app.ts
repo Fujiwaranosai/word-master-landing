@@ -38,6 +38,8 @@ new LandingHostingStack(app, `${projectNamePascal}-dev-Hosting`, {
   env: awsEnv,
   projectName,
   environment: 'dev',
+  domainName: process.env.DOMAIN_NAME,
+  certificateArn: process.env.ACM_CERTIFICATE_ARN,
 });
 
 app.synth();

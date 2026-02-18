@@ -1,5 +1,5 @@
 /* ============================================
-   Word Master Landing — main.js
+   Vocab Master Landing — main.js
    Mobile menu, smooth scroll, scroll animations
    ============================================ */
 
