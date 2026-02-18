@@ -1,0 +1,14 @@
+{
+  "name": "word-master-landing",
+  "version": "1.0.0",
+  "description": "Word Master Landing Site",
+  "private": true,
+  "scripts": {
+    "cdk:install": "cd cdk && npm install",
+    "cdk:synth": "cd cdk && npm run synth",
+    "cdk:deploy": "cd cdk && npm run deploy",
+    "cdk:deploy:dev": "cd cdk && npx cdk deploy 'WordMasterLanding-dev-Hosting'",
+    "cdk:diff:dev": "cd cdk && npx cdk diff 'WordMasterLanding-dev-Hosting'",
+    "cdk:destroy:dev": "cd cdk && npx cdk destroy 'WordMasterLanding-dev-Hosting'"
+  }
+}

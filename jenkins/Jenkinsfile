@@ -1,0 +1,214 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['dev', 'prod'],
+            description: 'Environment to deploy to'
+        )
+        string(
+            name: 'PROJECT_NAME',
+            defaultValue: 'word-master-landing',
+            description: 'Project name (must match CDK configuration)'
+        )
+    }
+
+    environment {
+        // AWS Region - update this to match your AWS setup
+        AWS_REGION = credentials('aws-region')
+        AWS_ACCOUNT_ID = credentials('aws-account-id')
+
+        // Stack name pattern for CloudFormation exports
+        STACK_NAME_PREFIX = getStackNamePrefix(params.PROJECT_NAME)
+
+        // Add common binary paths (AWS CLI, etc.)
+        PATH = "/usr/local/bin:/usr/bin:/usr/local/aws-cli/v2/current/bin:${env.PATH}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "Checking out code..."
+                checkout scm
+
+                script {
+                    echo "================================"
+                    echo "Build Information"
+                    echo "================================"
+                    echo "Environment: ${params.ENVIRONMENT}"
+                    echo "Build Number: ${env.BUILD_NUMBER}"
+                    echo "Build ID: ${env.BUILD_ID}"
+                    echo "================================"
+                }
+            }
+        }
+
+        stage('Verify AWS CLI') {
+            steps {
+                script {
+                    echo "Verifying AWS CLI setup..."
+                    sh """
+                        which aws || echo "AWS CLI not found in PATH"
+                        aws --version || echo "AWS CLI not available"
+                    """
+                }
+            }
+        }
+
+        stage('Fetch Deployment Targets') {
+            steps {
+                script {
+                    echo "Fetching S3 bucket and CloudFront distribution information..."
+
+                    withAWS(credentials: 'aws-credentials', region: env.AWS_REGION) {
+                        // Fetch S3 bucket name from CloudFormation exports
+                        def bucketName = sh(
+                            script: """
+                                aws cloudformation list-exports \
+                                    --region ${AWS_REGION} \
+                                    --query "Exports[?Name=='${STACK_NAME_PREFIX}-${params.ENVIRONMENT}-BucketName'].Value" \
+                                    --output text
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        // Fetch CloudFront distribution ID from CloudFormation exports
+                        def distributionId = sh(
+                            script: """
+                                aws cloudformation list-exports \
+                                    --region ${AWS_REGION} \
+                                    --query "Exports[?Name=='${STACK_NAME_PREFIX}-${params.ENVIRONMENT}-DistributionId'].Value" \
+                                    --output text
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        if (!bucketName || !distributionId) {
+                            error("Failed to fetch deployment targets. Ensure CDK stacks are deployed.")
+                        }
+
+                        env.S3_BUCKET = bucketName
+                        env.DISTRIBUTION_ID = distributionId
+
+                        echo "Deployment targets:"
+                        echo "   S3 Bucket: ${env.S3_BUCKET}"
+                        echo "   CloudFront Distribution: ${env.DISTRIBUTION_ID}"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to S3') {
+            steps {
+                script {
+                    echo "Deploying static files to S3..."
+
+                    withAWS(credentials: 'aws-credentials', region: env.AWS_REGION) {
+                        // Pass 1: HTML files with short cache (5 minutes)
+                        sh """
+                            aws s3 sync . s3://${env.S3_BUCKET} \
+                                --exclude "*" \
+                                --include "*.html" \
+                                --cache-control "public,max-age=300" \
+                                --region ${AWS_REGION}
+                        """
+
+                        // Pass 2: CSS, JS, images, SVG with long cache (1 year, immutable)
+                        sh """
+                            aws s3 sync . s3://${env.S3_BUCKET} \
+                                --exclude "*.html" \
+                                --exclude "cdk/*" \
+                                --exclude "jenkins/*" \
+                                --exclude "node_modules/*" \
+                                --exclude "package*.json" \
+                                --exclude ".git/*" \
+                                --exclude ".gitignore" \
+                                --exclude ".env*" \
+                                --exclude "*.md" \
+                                --cache-control "public,max-age=31536000,immutable" \
+                                --region ${AWS_REGION}
+                        """
+
+                        // Pass 3: Delete files from S3 that no longer exist locally
+                        sh """
+                            aws s3 sync . s3://${env.S3_BUCKET} \
+                                --delete \
+                                --exclude "cdk/*" \
+                                --exclude "jenkins/*" \
+                                --exclude "node_modules/*" \
+                                --exclude "package*.json" \
+                                --exclude ".git/*" \
+                                --exclude ".gitignore" \
+                                --exclude ".env*" \
+                                --exclude "*.md" \
+                                --region ${AWS_REGION}
+                        """
+
+                        echo "Deployed to S3 successfully"
+                    }
+                }
+            }
+        }
+
+        stage('Invalidate CloudFront Cache') {
+            steps {
+                script {
+                    echo "Invalidating CloudFront cache..."
+
+                    withAWS(credentials: 'aws-credentials', region: env.AWS_REGION) {
+                        def invalidationId = sh(
+                            script: """
+                                aws cloudfront create-invalidation \
+                                    --distribution-id ${env.DISTRIBUTION_ID} \
+                                    --paths "/*" \
+                                    --query 'Invalidation.Id' \
+                                    --output text
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        echo "CloudFront invalidation created: ${invalidationId}"
+                        echo "   It may take a few minutes for the cache to be fully invalidated."
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo """
+================================
+  Deployment Successful!
+  Environment: ${params.ENVIRONMENT}
+  S3 Bucket: ${env.S3_BUCKET ?: 'N/A'}
+  CloudFront: ${env.DISTRIBUTION_ID ?: 'N/A'}
+================================
+            """
+        }
+        failure {
+            echo """
+================================
+  Deployment Failed
+  Please check the logs above for error details.
+================================
+            """
+        }
+        always {
+            cleanWs(
+                deleteDirs: true,
+                patterns: [
+                    [pattern: '.env', type: 'INCLUDE']
+                ]
+            )
+        }
+    }
+}
+
+// Helper function to convert project name to PascalCase for CloudFormation export names
+def getStackNamePrefix(String projectName) {
+    return projectName.split('-')
+        .collect { it.capitalize() }
+        .join('')
+}

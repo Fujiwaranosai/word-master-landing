@@ -1,5 +1,14 @@
 .DS_Store
 Thumbs.db
 *.log
+*.local
 .env
 node_modules/
+
+# CDK
+cdk/node_modules
+cdk/cdk.out
+cdk/*.js
+cdk/*.d.ts
+cdk/.cdk.staging
+cdk/.env
