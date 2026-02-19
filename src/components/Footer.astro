@@ -1,4 +1,5 @@
 ---
+import { SITE_NAME, SITE_DESCRIPTION, TEAM_NAME } from '../consts';
 ---
 
 <footer class="footer">
@@ -6,10 +7,10 @@
     <div class="footer__inner">
       <div class="footer__brand">
         <a href="/" class="footer__logo">
-          <img src="/images/logo-light.png" alt="Vocab Master" width="28" height="28" />
-          Vocab Master
+          <img src="/images/logo-light.png" alt={SITE_NAME} width="28" height="28" />
+          {SITE_NAME}
         </a>
-        <p class="footer__tagline">Master words, not just memorize them. AI-powered vocabulary learning for serious learners.</p>
+        <p class="footer__tagline">{SITE_DESCRIPTION}</p>
       </div>
       <div class="footer__links">
         <div class="footer__col">
@@ -27,7 +28,7 @@
       </div>
     </div>
     <div class="footer__bottom">
-      <p>&copy; {new Date().getFullYear()} Vocab Master Team. All rights reserved.</p>
+      <p>&copy; {new Date().getFullYear()} {TEAM_NAME}. All rights reserved.</p>
     </div>
   </div>
 </footer>

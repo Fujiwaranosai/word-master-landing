@@ -1,4 +1,6 @@
 ---
+import { SITE_NAME, APP_URL } from '../consts';
+
 interface Props {
   currentPage?: string;
 }
@@ -13,8 +15,8 @@ const howItWorksHref = isHome ? '#how-it-works' : '/#how-it-works';
 <nav class="nav">
   <div class="container nav__inner">
     <a href="/" class="nav__logo">
-      <img class="nav__logo-icon" src="/images/logo-light.png" alt="Vocab Master" width="36" height="36" />
-      Vocab Master
+      <img class="nav__logo-icon" src="/images/logo-light.png" alt={SITE_NAME} width="36" height="36" />
+      {SITE_NAME}
     </a>
     <div class="nav__links" id="navLinks">
       <a href={featuresHref} class="nav__link">Features</a>
@@ -23,7 +25,7 @@ const howItWorksHref = isHome ? '#how-it-works' : '/#how-it-works';
       <a href="/blog/" class="nav__link">Blog</a>
       <a href="/terms/" class="nav__link">Terms</a>
       <a href="/privacy/" class="nav__link">Privacy</a>
-      <a href="https://word-master-app.dev.nhatbui.link" class="btn btn--primary nav__cta">Get Started Free</a>
+      <a href={APP_URL} class="btn btn--primary nav__cta">Get Started Free</a>
     </div>
     <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation">
       <span class="nav__toggle-bar"></span>

@@ -1,12 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import FinalCta from '../components/FinalCta.astro';
+import { SITE_NAME, APP_URL } from '../consts';
 ---
 
 <BaseLayout
-  title="Pricing — Vocab Master"
-  description="Simple, transparent pricing for Vocab Master. Start free, upgrade to Pro when you're ready."
-  ogTitle="Pricing — Vocab Master"
+  title={`Pricing — ${SITE_NAME}`}
+  description={`Simple, transparent pricing for ${SITE_NAME}. Start free, upgrade to Pro when you're ready.`}
+  ogTitle={`Pricing — ${SITE_NAME}`}
   ogDescription="Simple, transparent pricing. Start free, upgrade to Pro when you're ready."
   twitterCard="summary"
   canonicalPath="/pricing/"
@@ -42,7 +43,7 @@ import FinalCta from '../components/FinalCta.astro';
             <li class="disabled">Writing practice with AI grading</li>
             <li class="disabled">Priority support</li>
           </ul>
-          <a href="https://word-master-app.dev.nhatbui.link" class="btn btn--secondary">Get Started</a>
+          <a href={APP_URL} class="btn btn--secondary">Get Started</a>
         </div>
 
         <!-- Pro Plan -->
@@ -64,7 +65,7 @@ import FinalCta from '../components/FinalCta.astro';
             <li>Writing practice with AI grading</li>
             <li>Priority email support</li>
           </ul>
-          <a href="https://word-master-app.dev.nhatbui.link" class="btn btn--primary">Start Pro</a>
+          <a href={APP_URL} class="btn btn--primary">Start Pro</a>
         </div>
       </div>
 
@@ -85,11 +86,11 @@ import FinalCta from '../components/FinalCta.astro';
         </div>
         <div class="faq__item fade-in">
           <div class="faq__question">What languages are supported?</div>
-          <div class="faq__answer">Vocab Master is designed for English vocabulary learning. All content (definitions, examples, nuances) can be translated to 50+ native languages so you can learn in the way that's most effective for you.</div>
+          <div class="faq__answer">{SITE_NAME} is designed for English vocabulary learning. All content (definitions, examples, nuances) can be translated to 50+ native languages so you can learn in the way that's most effective for you.</div>
         </div>
         <div class="faq__item fade-in">
           <div class="faq__question">Can I use it on mobile?</div>
-          <div class="faq__answer">Yes! Vocab Master is a Progressive Web App (PWA), which means it works great on any device with a modern browser. You can add it to your home screen for an app-like experience.</div>
+          <div class="faq__answer">Yes! {SITE_NAME} is a Progressive Web App (PWA), which means it works great on any device with a modern browser. You can add it to your home screen for an app-like experience.</div>
         </div>
       </div>
     </div>

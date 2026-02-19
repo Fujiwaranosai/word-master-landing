@@ -1,10 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE_NAME, TEAM_NAME, SUPPORT_EMAIL } from '../consts';
 ---
 
 <BaseLayout
-  title="Privacy Policy — Vocab Master"
-  description="Privacy Policy for Vocab Master vocabulary learning application. Learn how we collect, use, and protect your data."
+  title={`Privacy Policy — ${SITE_NAME}`}
+  description={`Privacy Policy for ${SITE_NAME} vocabulary learning application. Learn how we collect, use, and protect your data.`}
   canonicalPath="/privacy/"
   currentPage="privacy"
 >
@@ -14,7 +15,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <h1>Privacy Policy</h1>
         <p class="legal__date">Effective Date: February 18, 2026</p>
 
-        <p>Vocab Master Team ("we", "us", or "our") operates the Vocab Master application and website (the "Service"). This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Service.</p>
+        <p>{TEAM_NAME} ("we", "us", or "our") operates the {SITE_NAME} application and website (the "Service"). This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Service.</p>
         <p>Please read this policy carefully. By using the Service, you consent to the practices described in this Privacy Policy.</p>
 
         <h2>1. Information We Collect</h2>
@@ -110,7 +111,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <h2>11. Contact Us</h2>
         <p>If you have questions or concerns about this Privacy Policy or our data practices, please contact us:</p>
         <ul>
-          <li>Email: support@word-master-app.dev.nhatbui.link</li>
+          <li>Email: {SUPPORT_EMAIL}</li>
           <li>Through the application's Settings &gt; Support page</li>
         </ul>
       </div>

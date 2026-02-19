@@ -1,5 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import { SITE_NAME } from '../consts';
 
 interface Props {
   title: string;
@@ -19,7 +20,7 @@ const formattedDate = pubDate.toLocaleDateString('en-US', {
 ---
 
 <BaseLayout
-  title={`${title} — Vocab Master Blog`}
+  title={`${title} — ${SITE_NAME} Blog`}
   description={description}
   ogTitle={title}
   ogDescription={description}

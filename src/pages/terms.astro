@@ -1,10 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE_NAME, TEAM_NAME, SUPPORT_EMAIL } from '../consts';
 ---
 
 <BaseLayout
-  title="Terms of Service — Vocab Master"
-  description="Terms of Service for Vocab Master vocabulary learning application."
+  title={`Terms of Service — ${SITE_NAME}`}
+  description={`Terms of Service for ${SITE_NAME} vocabulary learning application.`}
   canonicalPath="/terms/"
   currentPage="terms"
 >
@@ -14,7 +15,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <h1>Terms of Service</h1>
         <p class="legal__date">Effective Date: February 18, 2026</p>
 
-        <p>Welcome to Vocab Master. These Terms of Service ("Terms") govern your access to and use of the Vocab Master application and website (collectively, the "Service") operated by Vocab Master Team ("we", "us", or "our").</p>
+        <p>Welcome to {SITE_NAME}. These Terms of Service ("Terms") govern your access to and use of the {SITE_NAME} application and website (collectively, the "Service") operated by {TEAM_NAME} ("we", "us", or "our").</p>
         <p>By accessing or using the Service, you agree to be bound by these Terms. If you do not agree to these Terms, you may not use the Service.</p>
 
         <h2>1. Acceptance of Terms</h2>
@@ -67,7 +68,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
         <h2>5. Intellectual Property</h2>
         <h3>5.1 Our Content</h3>
-        <p>The Service, including its design, features, and original content, is owned by Vocab Master Team and is protected by intellectual property laws. You may not copy, modify, distribute, or create derivative works from our content without our express permission.</p>
+        <p>The Service, including its design, features, and original content, is owned by {TEAM_NAME} and is protected by intellectual property laws. You may not copy, modify, distribute, or create derivative works from our content without our express permission.</p>
 
         <h3>5.2 AI-Generated Content</h3>
         <p>The Service uses artificial intelligence to generate word definitions, examples, exercises, and other learning materials. This AI-generated content is provided for educational purposes within the Service. While you may use this content for your personal learning, you may not:</p>
@@ -109,7 +110,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <h2>10. Contact Information</h2>
         <p>If you have questions about these Terms, please contact us:</p>
         <ul>
-          <li>Email: support@word-master-app.dev.nhatbui.link</li>
+          <li>Email: {SUPPORT_EMAIL}</li>
           <li>Through the application's Settings &gt; Support page</li>
         </ul>
       </div>

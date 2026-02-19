@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import { SITE_NAME } from '../../consts';
 
 const posts = (await getCollection('blog')).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
@@ -8,8 +9,8 @@ const posts = (await getCollection('blog')).sort(
 ---
 
 <BaseLayout
-  title="Blog — Vocab Master"
-  description="Tips, strategies, and updates from the Vocab Master team to help you master vocabulary."
+  title={`Blog — ${SITE_NAME}`}
+  description={`Tips, strategies, and updates from the ${SITE_NAME} team to help you master vocabulary.`}
   canonicalPath="/blog/"
   currentPage="blog"
 >
