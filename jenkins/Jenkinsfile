@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'node-22'
+    }
+
     parameters {
         choice(
             name: 'ENVIRONMENT',
@@ -41,6 +45,20 @@ pipeline {
                     echo "Build ID: ${env.BUILD_ID}"
                     echo "================================"
                 }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo "Installing dependencies..."
+                sh 'npm ci'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo "Building Astro site..."
+                sh 'npm run build'
             }
         }
 
@@ -107,7 +125,7 @@ pipeline {
                     withAWS(credentials: 'aws-credentials', region: env.AWS_REGION) {
                         // Pass 1: HTML files with short cache (5 minutes)
                         sh """
-                            aws s3 sync . s3://${env.S3_BUCKET} \
+                            aws s3 sync dist/ s3://${env.S3_BUCKET} \
                                 --exclude "*" \
                                 --include "*.html" \
                                 --cache-control "public,max-age=300" \
@@ -116,32 +134,16 @@ pipeline {
 
                         // Pass 2: CSS, JS, images, SVG with long cache (1 year, immutable)
                         sh """
-                            aws s3 sync . s3://${env.S3_BUCKET} \
+                            aws s3 sync dist/ s3://${env.S3_BUCKET} \
                                 --exclude "*.html" \
-                                --exclude "cdk/*" \
-                                --exclude "jenkins/*" \
-                                --exclude "node_modules/*" \
-                                --exclude "package*.json" \
-                                --exclude ".git/*" \
-                                --exclude ".gitignore" \
-                                --exclude ".env*" \
-                                --exclude "*.md" \
                                 --cache-control "public,max-age=31536000,immutable" \
                                 --region ${AWS_REGION}
                         """
 
-                        // Pass 3: Delete files from S3 that no longer exist locally
+                        // Pass 3: Delete files from S3 that no longer exist in dist/
                         sh """
-                            aws s3 sync . s3://${env.S3_BUCKET} \
+                            aws s3 sync dist/ s3://${env.S3_BUCKET} \
                                 --delete \
-                                --exclude "cdk/*" \
-                                --exclude "jenkins/*" \
-                                --exclude "node_modules/*" \
-                                --exclude "package*.json" \
-                                --exclude ".git/*" \
-                                --exclude ".gitignore" \
-                                --exclude ".env*" \
-                                --exclude "*.md" \
                                 --region ${AWS_REGION}
                         """
 

@@ -1,14 +1,21 @@
 {
   "name": "word-master-landing",
   "version": "1.0.0",
-  "description": "Word Master Landing Site",
+  "description": "Vocab Master Landing Site",
   "private": true,
+  "type": "module",
   "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
     "cdk:install": "cd cdk && npm install",
     "cdk:synth": "cd cdk && npm run synth",
     "cdk:deploy": "cd cdk && npm run deploy",
     "cdk:deploy:dev": "cd cdk && npx cdk deploy 'WordMasterLanding-dev-Hosting'",
     "cdk:diff:dev": "cd cdk && npx cdk diff 'WordMasterLanding-dev-Hosting'",
     "cdk:destroy:dev": "cd cdk && npx cdk destroy 'WordMasterLanding-dev-Hosting'"
+  },
+  "dependencies": {
+    "astro": "^5.5.0"
   }
 }

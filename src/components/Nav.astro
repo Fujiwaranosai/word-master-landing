@@ -1,0 +1,34 @@
+---
+interface Props {
+  currentPage?: string;
+}
+
+const { currentPage = '' } = Astro.props;
+
+const isHome = currentPage === 'home';
+const featuresHref = isHome ? '#features' : '/#features';
+const howItWorksHref = isHome ? '#how-it-works' : '/#how-it-works';
+---
+
+<nav class="nav">
+  <div class="container nav__inner">
+    <a href="/" class="nav__logo">
+      <img class="nav__logo-icon" src="/images/logo-light.png" alt="Vocab Master" width="36" height="36" />
+      Vocab Master
+    </a>
+    <div class="nav__links" id="navLinks">
+      <a href={featuresHref} class="nav__link">Features</a>
+      <a href={howItWorksHref} class="nav__link">How It Works</a>
+      <a href="/pricing/" class="nav__link">Pricing</a>
+      <a href="/blog/" class="nav__link">Blog</a>
+      <a href="/terms/" class="nav__link">Terms</a>
+      <a href="/privacy/" class="nav__link">Privacy</a>
+      <a href="https://word-master-app.dev.nhatbui.link" class="btn btn--primary nav__cta">Get Started Free</a>
+    </div>
+    <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation">
+      <span class="nav__toggle-bar"></span>
+      <span class="nav__toggle-bar"></span>
+      <span class="nav__toggle-bar"></span>
+    </button>
+  </div>
+</nav>

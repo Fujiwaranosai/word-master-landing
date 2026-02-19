@@ -3,6 +3,10 @@ Thumbs.db
 *.log
 *.local
 .env
+
+# Astro
+dist/
+.astro/
 node_modules/
 
 # CDK
