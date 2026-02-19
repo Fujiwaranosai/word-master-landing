@@ -38,18 +38,44 @@ export class LandingHostingStack extends Stack {
       autoDeleteObjects: false,
     });
 
+    // CloudFront Function to rewrite /path/ → /path/index.html
+    // Required for Astro's directory-style output (e.g. /pricing/index.html)
+    const urlRewriteFunction = new cloudfront.Function(
+      this,
+      'UrlRewriteFunction',
+      {
+        code: cloudfront.FunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  var uri = request.uri;
+  if (uri.endsWith('/')) {
+    request.uri += 'index.html';
+  } else if (!uri.includes('.')) {
+    request.uri += '/index.html';
+  }
+  return request;
+}
+        `),
+        runtime: cloudfront.FunctionRuntime.JS_2_0,
+        comment: 'Rewrite directory URLs to index.html for Astro static output',
+      },
+    );
+
     // CloudFront Distribution with Origin Access Control (OAC)
-    // No SPA routing — this is a static multi-page site
-    // No CloudFront Function — no geo-detection needed
     this.distribution = new cloudfront.Distribution(this, 'Distribution', {
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(this.bucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         originRequestPolicy: cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN,
+        functionAssociations: [
+          {
+            function: urlRewriteFunction,
+            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+          },
+        ],
       },
       defaultRootObject: 'index.html',
-      // No error responses — not an SPA, return actual 404s for missing pages
       comment: `${projectName} - ${environment.toUpperCase()}`,
       // Custom domain + certificate (optional)
       ...(domainName && certificate
