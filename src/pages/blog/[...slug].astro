@@ -20,6 +20,8 @@ const { Content } = await render(post);
   description={post.data.description}
   author={post.data.author}
   tags={post.data.tags}
+  collectionId={post.data.collectionId}
+  collectionWords={post.data.collectionWords}
 >
   <Content />
 </BlogPostLayout>

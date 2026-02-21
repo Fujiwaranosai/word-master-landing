@@ -1,0 +1,76 @@
+---
+import { APP_URL } from '../consts';
+
+interface Props {
+  collectionId: string;
+  words?: string[];
+  title?: string;
+}
+
+const { collectionId, words, title = 'Learn these words' } = Astro.props;
+const importUrl = `${APP_URL}/import?collectionId=${collectionId}`;
+---
+
+<aside class="collection-cta">
+  <h3 class="collection-cta__title">{title}</h3>
+  {words && words.length > 0 && (
+    <div class="collection-cta__words">
+      {words.map((word) => (
+        <span class="collection-cta__word">{word}</span>
+      ))}
+    </div>
+  )}
+  <a
+    href={importUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    class="btn btn--primary collection-cta__btn"
+  >
+    Add to Vocabulary
+  </a>
+</aside>
+
+<style>
+  .collection-cta {
+    margin-top: 48px;
+    padding: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg-alt);
+  }
+
+  .collection-cta__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--color-text);
+  }
+
+  .collection-cta__words {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .collection-cta__word {
+    display: inline-block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    padding: 6px 14px;
+    border-radius: 100px;
+    line-height: 1.4;
+  }
+
+  .collection-cta__btn {
+    display: inline-flex;
+  }
+
+  @media (max-width: 480px) {
+    .collection-cta {
+      padding: 24px;
+    }
+  }
+</style>

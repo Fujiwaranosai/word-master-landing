@@ -1,5 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import CollectionCta from '../components/CollectionCta.astro';
 import { SITE_NAME } from '../consts';
 
 interface Props {
@@ -8,9 +9,11 @@ interface Props {
   description: string;
   author: string;
   tags?: string[];
+  collectionId?: string;
+  collectionWords?: string[];
 }
 
-const { title, pubDate, description, author, tags = [] } = Astro.props;
+const { title, pubDate, description, author, tags = [], collectionId, collectionWords } = Astro.props;
 
 const formattedDate = pubDate.toLocaleDateString('en-US', {
   year: 'numeric',
@@ -46,6 +49,9 @@ const formattedDate = pubDate.toLocaleDateString('en-US', {
         <div class="blog-post__body">
           <slot />
         </div>
+        {collectionId && (
+          <CollectionCta collectionId={collectionId} words={collectionWords} />
+        )}
       </div>
     </div>
   </article>
