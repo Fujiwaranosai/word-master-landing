@@ -27,6 +27,7 @@ const {
 
 const siteUrl = 'https://vocabmaster.nhatbui.link';
 const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : undefined;
+const allowIndexing = import.meta.env.PUBLIC_ALLOW_INDEXING === 'true';
 ---
 
 <!DOCTYPE html>
@@ -35,6 +36,7 @@ const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : undefined;
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{title}</title>
+  {!allowIndexing && <meta name="robots" content="noindex, nofollow" />}
   {description && <meta name="description" content={description} />}
   {ogTitle && <meta property="og:title" content={ogTitle} />}
   {ogDescription && <meta property="og:description" content={ogDescription} />}

@@ -55,6 +55,54 @@ pipeline {
             }
         }
 
+        stage('Fetch Environment Variables') {
+            steps {
+                script {
+                    echo "Fetching environment variables from AWS Parameter Store..."
+
+                    withAWS(credentials: 'aws-credentials', region: env.AWS_REGION) {
+                        // Fetch SEO indexing flag from Parameter Store
+                        def allowIndexing = sh(
+                            script: """
+                                aws ssm get-parameter \
+                                    --name /${params.PROJECT_NAME}/${params.ENVIRONMENT}/seo/allow-indexing \
+                                    --query 'Parameter.Value' \
+                                    --output text \
+                                    --region ${AWS_REGION} 2>/dev/null || echo 'false'
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        // Fetch support email from backend Parameter Store
+                        def supportEmail = sh(
+                            script: """
+                                aws ssm get-parameter \
+                                    --name /word-master-backend/${params.ENVIRONMENT}/app/support-email \
+                                    --query 'Parameter.Value' \
+                                    --output text \
+                                    --region ${AWS_REGION} 2>/dev/null || echo ''
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        env.ALLOW_INDEXING = allowIndexing
+                        env.SUPPORT_EMAIL = supportEmail
+                        echo "SEO indexing: ${allowIndexing}"
+                        echo "Support email: ${supportEmail ?: '(using default)'}"
+                    }
+
+                    sh """
+                        echo "PUBLIC_ALLOW_INDEXING=${env.ALLOW_INDEXING}" > .env
+                        if [ -n "${env.SUPPORT_EMAIL}" ]; then
+                            echo "PUBLIC_SUPPORT_EMAIL=${env.SUPPORT_EMAIL}" >> .env
+                        fi
+                        echo ".env file created"
+                        cat .env
+                    """
+                }
+            }
+        }
+
         stage('Build') {
             steps {
                 echo "Building Astro site..."
