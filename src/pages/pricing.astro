@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import FinalCta from '../components/FinalCta.astro';
-import { SITE_NAME, APP_URL } from '../consts';
+import { SITE_NAME, APP_REGISTER_URL, APP_REGISTER_PRO_URL } from '../consts';
 ---
 
 <BaseLayout
@@ -43,7 +43,7 @@ import { SITE_NAME, APP_URL } from '../consts';
             <li class="disabled">Writing practice with AI grading</li>
             <li class="disabled">Priority support</li>
           </ul>
-          <a href={APP_URL} class="btn btn--secondary">Get Started</a>
+          <a href={APP_REGISTER_URL} class="btn btn--secondary">Get Started</a>
         </div>
 
         <!-- Pro Plan -->
@@ -65,7 +65,7 @@ import { SITE_NAME, APP_URL } from '../consts';
             <li>Writing practice with AI grading</li>
             <li>Priority email support</li>
           </ul>
-          <a href={APP_URL} class="btn btn--primary">Start Pro</a>
+          <a href={APP_REGISTER_PRO_URL} class="btn btn--primary">Start Pro</a>
         </div>
       </div>
 
