@@ -85,16 +85,33 @@ pipeline {
                             returnStdout: true
                         ).trim()
 
+                        // Fetch GA4 Measurement ID from Parameter Store
+                        def gaMeasurementId = sh(
+                            script: """
+                                aws ssm get-parameter \
+                                    --name /${params.PROJECT_NAME}/${params.ENVIRONMENT}/analytics/ga-measurement-id \
+                                    --query 'Parameter.Value' \
+                                    --output text \
+                                    --region ${AWS_REGION} 2>/dev/null || echo ''
+                            """,
+                            returnStdout: true
+                        ).trim()
+
                         env.ALLOW_INDEXING = allowIndexing
                         env.SUPPORT_EMAIL = supportEmail
+                        env.GA_MEASUREMENT_ID = gaMeasurementId
                         echo "SEO indexing: ${allowIndexing}"
                         echo "Support email: ${supportEmail ?: '(using default)'}"
+                        echo "GA Measurement ID: ${gaMeasurementId ?: '(disabled)'}"
                     }
 
                     sh """
                         echo "PUBLIC_ALLOW_INDEXING=${env.ALLOW_INDEXING}" > .env
                         if [ -n "${env.SUPPORT_EMAIL}" ]; then
                             echo "PUBLIC_SUPPORT_EMAIL=${env.SUPPORT_EMAIL}" >> .env
+                        fi
+                        if [ -n "${env.GA_MEASUREMENT_ID}" ]; then
+                            echo "PUBLIC_GA_MEASUREMENT_ID=${env.GA_MEASUREMENT_ID}" >> .env
                         fi
                         echo ".env file created"
                         cat .env
