@@ -28,6 +28,7 @@ const {
 const siteUrl = 'https://vocabmaster.nhatbui.link';
 const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : undefined;
 const allowIndexing = import.meta.env.PUBLIC_ALLOW_INDEXING === 'true';
+const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 ---
 
 <!DOCTYPE html>
@@ -47,6 +48,17 @@ const allowIndexing = import.meta.env.PUBLIC_ALLOW_INDEXING === 'true';
   {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
   <link rel="icon" type="image/png" sizes="192x192" href="/logo192.png" />
   <link rel="apple-touch-icon" href="/logo192.png" />
+  {gaMeasurementId && (
+    <>
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}></script>
+      <script define:vars={{ gaMeasurementId }}>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', gaMeasurementId, { anonymize_ip: true });
+      </script>
+    </>
+  )}
 </head>
 <body>
   <Nav currentPage={currentPage} />
@@ -118,6 +130,19 @@ const allowIndexing = import.meta.env.PUBLIC_ALLOW_INDEXING === 'true';
     } else {
       fadeElements.forEach(function (el) {
         el.classList.add('visible');
+      });
+    }
+
+    // --- GA4 CTA Click Tracking ---
+    if (typeof gtag === 'function') {
+      document.querySelectorAll('[data-ga-cta]').forEach(function (el) {
+        el.addEventListener('click', function () {
+          gtag('event', 'cta_click', {
+            cta_name: el.getAttribute('data-ga-cta'),
+            cta_location: el.getAttribute('data-ga-location') || '',
+            link_url: el.getAttribute('href') || '',
+          });
+        });
       });
     }
   </script>

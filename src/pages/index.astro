@@ -20,8 +20,8 @@ import { SITE_NAME, APP_URL } from '../consts';
       <h1>Master Words, Not Just Memorize Them</h1>
       <p class="hero__sub">Learn vocabulary the way your brain works &mdash; through nuance, context, and real usage. Powered by AI.</p>
       <div class="hero__actions">
-        <a href={APP_URL} class="btn btn--primary btn--large">Start Learning for Free</a>
-        <a href="/pricing/" class="btn btn--secondary btn--large">See Pricing</a>
+        <a href={APP_URL} class="btn btn--primary btn--large" data-ga-cta="start_learning_free" data-ga-location="hero">Start Learning for Free</a>
+        <a href="/pricing/" class="btn btn--secondary btn--large" data-ga-cta="see_pricing" data-ga-location="hero">See Pricing</a>
       </div>
       <div class="hero__visual">
         <svg class="hero__image" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
@@ -220,7 +220,7 @@ import { SITE_NAME, APP_URL } from '../consts';
           </ul>
         </div>
       </div>
-      <a href="/pricing/" class="btn btn--secondary">See Full Pricing</a>
+      <a href="/pricing/" class="btn btn--secondary" data-ga-cta="see_full_pricing" data-ga-location="pricing_teaser">See Full Pricing</a>
     </div>
   </section>
 
