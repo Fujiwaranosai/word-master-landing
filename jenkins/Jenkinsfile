@@ -110,7 +110,7 @@ pipeline {
                         if [ -n "${env.SUPPORT_EMAIL}" ]; then
                             echo "PUBLIC_SUPPORT_EMAIL=${env.SUPPORT_EMAIL}" >> .env
                         fi
-                        if [ -n "${env.GA_MEASUREMENT_ID}" ]; then
+                        if [ -n "${env.GA_MEASUREMENT_ID}" ] && [ "${env.GA_MEASUREMENT_ID}" != "none" ]; then
                             echo "PUBLIC_GA_MEASUREMENT_ID=${env.GA_MEASUREMENT_ID}" >> .env
                         fi
                         echo ".env file created"
