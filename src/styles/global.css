@@ -781,6 +781,11 @@ h3 {
   padding: 100px 0 80px;
 }
 
+/* Embed mode: hides marketing nav/footer for mobile app WebViews. */
+body.embed-app .legal {
+  padding: 32px 0 48px;
+}
+
 .legal__content {
   max-width: 760px;
   margin: 0 auto;

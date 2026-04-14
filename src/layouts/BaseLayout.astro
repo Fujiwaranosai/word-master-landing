@@ -29,6 +29,11 @@ const siteUrl = 'https://vocabmaster.nhatbui.link';
 const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : undefined;
 const allowIndexing = import.meta.env.PUBLIC_ALLOW_INDEXING === 'true';
 const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
+
+// Embed mode: when loaded inside a mobile app WebView (or iframe) via
+// `?embed=app`, hide the marketing chrome (nav + footer) so the legal
+// content reads cleanly without context-switching back to the site.
+const embedMode = Astro.url.searchParams.get('embed') === 'app';
 ---
 
 <!DOCTYPE html>
@@ -60,14 +65,14 @@ const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
     </>
   )}
 </head>
-<body>
-  <Nav currentPage={currentPage} />
+<body class:list={[{ 'embed-app': embedMode }]}>
+  {!embedMode && <Nav currentPage={currentPage} />}
 
   <main>
     <slot />
   </main>
 
-  <Footer />
+  {!embedMode && <Footer />}
 
   <script>
     // --- Mobile Navigation Toggle ---
