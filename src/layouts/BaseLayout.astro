@@ -39,6 +39,20 @@ const embedMode = Astro.url.searchParams.get('embed') === 'app';
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script is:inline>
+    // No-flash theme bootstrap. Runs synchronously before paint so the
+    // [data-theme] attribute is already set when the body styles apply.
+    (function () {
+      try {
+        var stored = localStorage.getItem('vocabmine-theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = stored || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (_) {
+        /* localStorage blocked / SSR fallback — leave as light (default). */
+      }
+    })();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{title}</title>
