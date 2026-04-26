@@ -8,3 +8,4 @@ export const SUPPORT_EMAIL = import.meta.env.PUBLIC_SUPPORT_EMAIL || 'support@wo
 export const TEAM_NAME = 'Vocab Mine Team';
 export const APP_REGISTER_URL = `${APP_URL}/signup`;
 export const APP_REGISTER_PRO_URL = `${APP_URL}/signup?plan=pro`;
+export const APP_REGISTER_PREMIUM_URL = `${APP_URL}/signup?plan=premium`;

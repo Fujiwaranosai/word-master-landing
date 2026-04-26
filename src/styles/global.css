@@ -508,6 +508,11 @@ h3 {
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
+.pricing-teaser__card--premium {
+  border-color: #d4a017;
+  box-shadow: 0 0 0 1px #d4a017;
+}
+
 .pricing-teaser__card h3 {
   margin-bottom: 12px;
 }
@@ -647,10 +652,154 @@ h3 {
 
 .pricing-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 32px;
-  max-width: 800px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  max-width: 1100px;
   margin: 0 auto;
+  align-items: stretch;
+}
+
+/* Stack cards on tablet/mobile (handled in media query block too) */
+@media (max-width: 960px) {
+  .pricing-cards {
+    grid-template-columns: 1fr;
+    max-width: 460px;
+  }
+}
+
+.pricing-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.pricing-card .btn {
+  margin-top: auto;
+}
+
+/* --- Billing toggle --- */
+.billing-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  padding: 4px;
+  margin: 0 auto 40px;
+  position: relative;
+}
+
+.billing-toggle__wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.billing-toggle__hint {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 32px;
+  min-height: 1.25rem;
+}
+
+.billing-toggle__btn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding: 8px 20px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.billing-toggle__btn[aria-pressed="true"] {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.billing-toggle__save {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--color-accent);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 100px;
+  vertical-align: middle;
+}
+
+.billing-toggle__btn[aria-pressed="true"] .billing-toggle__save {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* --- Price annual/monthly swap --- */
+.pricing-card__price-line {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  margin-top: 6px;
+  min-height: 1rem;
+}
+
+.pricing-card__save-pill {
+  display: inline-block;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 100px;
+  margin-left: 4px;
+}
+
+/* Hide annual price block by default; toggle swaps via body class */
+.pricing-card__price--annual {
+  display: none;
+}
+
+body.is-annual .pricing-card__price--monthly {
+  display: none;
+}
+
+body.is-annual .pricing-card__price--annual {
+  display: block;
+}
+
+/* --- Premium card accent --- */
+.pricing-card--premium {
+  border-color: #b45309;
+  box-shadow: 0 0 0 1px #b45309, 0 8px 30px rgba(180, 83, 9, 0.10);
+  background: linear-gradient(180deg, #fffbeb 0%, var(--color-bg) 60%);
+}
+
+.pricing-card--premium .pricing-card__caption {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #f59e0b, #b45309);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 5px 16px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+
+.pricing-card--premium .pricing-card__features li::before {
+  background: #b45309;
 }
 
 .pricing-card {
