@@ -16,6 +16,30 @@ pipeline {
             defaultValue: 'word-master-landing',
             description: 'Project name (must match CDK configuration)'
         )
+        // Build-time env vars. Previously fetched from SSM Parameter Store;
+        // now sourced directly from Jenkins so we don't depend on AWS
+        // CodePipeline / SSM round-trips. Set the actual values per-job
+        // (job config persists them).
+        string(
+            name: 'APP_URL',
+            defaultValue: 'https://word-master-app.dev.nhatbui.link',
+            description: 'Vocab Mine app base URL — pricing buttons + blog deep-links build off this. No trailing slash.'
+        )
+        string(
+            name: 'SUPPORT_EMAIL',
+            defaultValue: '',
+            description: 'Support email shown in footer / contact links (optional)'
+        )
+        string(
+            name: 'GA_MEASUREMENT_ID',
+            defaultValue: '',
+            description: 'Google Analytics 4 Measurement ID (leave blank to disable)'
+        )
+        booleanParam(
+            name: 'ALLOW_INDEXING',
+            defaultValue: false,
+            description: 'Allow search engine crawling (true for prod, false for dev)'
+        )
     }
 
     environment {
@@ -55,63 +79,20 @@ pipeline {
             }
         }
 
-        stage('Fetch Environment Variables') {
+        stage('Create Environment File') {
             steps {
                 script {
-                    echo "Fetching environment variables from AWS Parameter Store..."
-
-                    withAWS(credentials: 'aws-credentials', region: env.AWS_REGION) {
-                        // Fetch SEO indexing flag from Parameter Store
-                        def allowIndexing = sh(
-                            script: """
-                                aws ssm get-parameter \
-                                    --name /${params.PROJECT_NAME}/${params.ENVIRONMENT}/seo/allow-indexing \
-                                    --query 'Parameter.Value' \
-                                    --output text \
-                                    --region ${AWS_REGION} 2>/dev/null || echo 'false'
-                            """,
-                            returnStdout: true
-                        ).trim()
-
-                        // Fetch support email from backend Parameter Store
-                        def supportEmail = sh(
-                            script: """
-                                aws ssm get-parameter \
-                                    --name /word-master-backend/${params.ENVIRONMENT}/app/support-email \
-                                    --query 'Parameter.Value' \
-                                    --output text \
-                                    --region ${AWS_REGION} 2>/dev/null || echo ''
-                            """,
-                            returnStdout: true
-                        ).trim()
-
-                        // Fetch GA4 Measurement ID from Parameter Store
-                        def gaMeasurementId = sh(
-                            script: """
-                                aws ssm get-parameter \
-                                    --name /${params.PROJECT_NAME}/${params.ENVIRONMENT}/analytics/ga-measurement-id \
-                                    --query 'Parameter.Value' \
-                                    --output text \
-                                    --region ${AWS_REGION} 2>/dev/null || echo ''
-                            """,
-                            returnStdout: true
-                        ).trim()
-
-                        env.ALLOW_INDEXING = allowIndexing
-                        env.SUPPORT_EMAIL = supportEmail
-                        env.GA_MEASUREMENT_ID = gaMeasurementId
-                        echo "SEO indexing: ${allowIndexing}"
-                        echo "Support email: ${supportEmail ?: '(using default)'}"
-                        echo "GA Measurement ID: ${gaMeasurementId ?: '(disabled)'}"
-                    }
-
+                    echo "Writing build-time .env from Jenkins parameters..."
                     sh """
-                        echo "PUBLIC_ALLOW_INDEXING=${env.ALLOW_INDEXING}" > .env
-                        if [ -n "${env.SUPPORT_EMAIL}" ]; then
-                            echo "PUBLIC_SUPPORT_EMAIL=${env.SUPPORT_EMAIL}" >> .env
+                        echo "PUBLIC_ALLOW_INDEXING=${params.ALLOW_INDEXING}" > .env
+                        if [ -n "${params.SUPPORT_EMAIL}" ]; then
+                            echo "PUBLIC_SUPPORT_EMAIL=${params.SUPPORT_EMAIL}" >> .env
                         fi
-                        if [ -n "${env.GA_MEASUREMENT_ID}" ] && [ "${env.GA_MEASUREMENT_ID}" != "none" ]; then
-                            echo "PUBLIC_GA_MEASUREMENT_ID=${env.GA_MEASUREMENT_ID}" >> .env
+                        if [ -n "${params.GA_MEASUREMENT_ID}" ] && [ "${params.GA_MEASUREMENT_ID}" != "none" ]; then
+                            echo "PUBLIC_GA_MEASUREMENT_ID=${params.GA_MEASUREMENT_ID}" >> .env
+                        fi
+                        if [ -n "${params.APP_URL}" ]; then
+                            echo "PUBLIC_APP_URL=${params.APP_URL}" >> .env
                         fi
                         echo ".env file created"
                         cat .env

@@ -14,7 +14,10 @@ const blog = defineCollection({
       alt: z.string(),
     }).optional(),
     tags: z.array(z.string()).default([]),
-    collectionId: z.string().optional(),
+    // Stable, environment-portable identifier (kebab-case). The
+    // CollectionCta component links to /collections/by-slug/:slug in
+    // the app, which resolves to the per-environment collection ID.
+    collectionSlug: z.string().optional(),
     collectionWords: z.array(z.string()).optional(),
   }),
 });

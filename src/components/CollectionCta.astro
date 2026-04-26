@@ -2,13 +2,18 @@
 import { APP_URL } from '../consts';
 
 interface Props {
-  collectionId: string;
+  // Stable, environment-portable identifier set by an admin in the
+  // Vocab Mine admin panel (e.g., "sherlock-holmes-chapter-1"). The
+  // app's /collections/by-slug/:slug route resolves this to the
+  // current-environment collection ID, so the same .md file works in
+  // dev and prod without per-deploy edits.
+  collectionSlug: string;
   words?: string[];
   title?: string;
 }
 
-const { collectionId, words, title = 'Learn these words' } = Astro.props;
-const importUrl = `${APP_URL}/import?collectionId=${collectionId}`;
+const { collectionSlug, words, title = 'Learn these words' } = Astro.props;
+const ctaUrl = `${APP_URL}/collections/by-slug/${collectionSlug}`;
 ---
 
 <aside class="collection-cta">
@@ -21,14 +26,14 @@ const importUrl = `${APP_URL}/import?collectionId=${collectionId}`;
     </div>
   )}
   <a
-    href={importUrl}
+    href={ctaUrl}
     target="_blank"
     rel="noopener noreferrer"
     class="btn btn--primary collection-cta__btn"
     data-ga-cta="add_to_vocabulary"
     data-ga-location="blog_collection_cta"
   >
-    Add to Vocabulary
+    Open in App
   </a>
 </aside>
 

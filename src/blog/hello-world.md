@@ -23,6 +23,6 @@ Here's what you'll find on this blog:
 
 ## Get Started
 
-If you haven't tried Vocab Mine yet, [sign up for free](https://word-master-app.dev.nhatbui.link) and start building your vocabulary the smart way. Add any word, and our AI will process it with definitions, examples, nuances, and more — all translated to your native language.
+If you haven't tried Vocab Mine yet, see our [pricing page](/pricing/) and pick the plan that fits — start free, upgrade when you're ready. Add any word, and our AI will process it with definitions, examples, nuances, and more — all translated to your native language.
 
 Stay tuned for more posts coming soon!
