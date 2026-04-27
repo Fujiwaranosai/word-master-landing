@@ -79,6 +79,16 @@ body {
   background: var(--color-bg);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  /* Sticky-footer pattern: body fills the viewport as a flex column, main
+     grows to fill the leftover space, footer stays at the bottom on short
+     pages like /blog/ or a single blog post. */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1 0 auto;
 }
 
 img {
