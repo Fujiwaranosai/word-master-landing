@@ -42,4 +42,16 @@ new LandingHostingStack(app, `${projectNamePascal}-dev-Hosting`, {
   certificateArn: process.env.ACM_CERTIFICATE_ARN,
 });
 
+// Staging — pinned to us-east-1 because the in-stack ACM cert must live
+// there for CloudFront; the S3 bucket is us-east-1 too. The hosting
+// stack creates its own cert + Route53 alias. Jenkins deploys content.
+new LandingHostingStack(app, `${projectNamePascal}-staging-Hosting`, {
+  env: { account: process.env.AWS_ACCOUNT_ID!, region: 'us-east-1' },
+  projectName,
+  environment: 'staging',
+  domainName: 'staging-landing-5ae3fa73.vocabmine.com',
+  hostedZoneId: 'Z01207665E0BNZZX7Z7H',
+  hostedZoneName: 'vocabmine.com',
+});
+
 app.synth();

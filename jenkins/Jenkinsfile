@@ -8,7 +8,7 @@ pipeline {
     parameters {
         choice(
             name: 'ENVIRONMENT',
-            choices: ['dev', 'prod'],
+            choices: ['dev', 'staging', 'prod'],
             description: 'Environment to deploy to'
         )
         string(
@@ -72,6 +72,17 @@ pipeline {
             }
         }
 
+        stage('Resolve Region') {
+            steps {
+                script {
+                    // Staging static-site stacks (S3 + CloudFront + ACM) are
+                    // in us-east-1; dev/prod use the aws-region credential.
+                    env.DEPLOY_REGION = params.ENVIRONMENT == 'staging' ? 'us-east-1' : env.AWS_REGION
+                    echo "Deploy region: ${env.DEPLOY_REGION}"
+                }
+            }
+        }
+
         stage('Install Dependencies') {
             steps {
                 echo "Installing dependencies..."
@@ -125,12 +136,12 @@ pipeline {
                 script {
                     echo "Fetching S3 bucket and CloudFront distribution information..."
 
-                    withAWS(credentials: 'aws-credentials', region: env.AWS_REGION) {
+                    withAWS(credentials: 'aws-credentials', region: env.DEPLOY_REGION) {
                         // Fetch S3 bucket name from CloudFormation exports
                         def bucketName = sh(
                             script: """
                                 aws cloudformation list-exports \
-                                    --region ${AWS_REGION} \
+                                    --region ${env.DEPLOY_REGION} \
                                     --query "Exports[?Name=='${STACK_NAME_PREFIX}-${params.ENVIRONMENT}-BucketName'].Value" \
                                     --output text
                             """,
@@ -141,7 +152,7 @@ pipeline {
                         def distributionId = sh(
                             script: """
                                 aws cloudformation list-exports \
-                                    --region ${AWS_REGION} \
+                                    --region ${env.DEPLOY_REGION} \
                                     --query "Exports[?Name=='${STACK_NAME_PREFIX}-${params.ENVIRONMENT}-DistributionId'].Value" \
                                     --output text
                             """,
@@ -168,14 +179,14 @@ pipeline {
                 script {
                     echo "Deploying static files to S3..."
 
-                    withAWS(credentials: 'aws-credentials', region: env.AWS_REGION) {
+                    withAWS(credentials: 'aws-credentials', region: env.DEPLOY_REGION) {
                         // Pass 1: HTML files with short cache (5 minutes)
                         sh """
                             aws s3 sync dist/ s3://${env.S3_BUCKET} \
                                 --exclude "*" \
                                 --include "*.html" \
                                 --cache-control "public,max-age=300" \
-                                --region ${AWS_REGION}
+                                --region ${env.DEPLOY_REGION}
                         """
 
                         // Pass 2: CSS, JS, images, SVG with long cache (1 year, immutable)
@@ -183,14 +194,14 @@ pipeline {
                             aws s3 sync dist/ s3://${env.S3_BUCKET} \
                                 --exclude "*.html" \
                                 --cache-control "public,max-age=31536000,immutable" \
-                                --region ${AWS_REGION}
+                                --region ${env.DEPLOY_REGION}
                         """
 
                         // Pass 3: Delete files from S3 that no longer exist in dist/
                         sh """
                             aws s3 sync dist/ s3://${env.S3_BUCKET} \
                                 --delete \
-                                --region ${AWS_REGION}
+                                --region ${env.DEPLOY_REGION}
                         """
 
                         echo "Deployed to S3 successfully"
@@ -204,7 +215,7 @@ pipeline {
                 script {
                     echo "Invalidating CloudFront cache..."
 
-                    withAWS(credentials: 'aws-credentials', region: env.AWS_REGION) {
+                    withAWS(credentials: 'aws-credentials', region: env.DEPLOY_REGION) {
                         def invalidationId = sh(
                             script: """
                                 aws cloudfront create-invalidation \

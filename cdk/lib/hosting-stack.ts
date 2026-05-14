@@ -2,15 +2,25 @@ import * as cdk from 'aws-cdk-lib';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { CfnOutput, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 export interface LandingHostingStackProps extends StackProps {
   projectName: string;
-  environment: 'dev' | 'prod';
+  environment: 'dev' | 'staging' | 'prod';
   domainName?: string;
+  /** Import an existing ACM cert by ARN. Mutually exclusive with hostedZoneId. */
   certificateArn?: string;
+  /**
+   * When set with domainName (and no certificateArn), the stack creates
+   * its own DNS-validated ACM cert + a Route53 alias record. The stack
+   * must then be in us-east-1 (CloudFront cert requirement).
+   */
+  hostedZoneId?: string;
+  hostedZoneName?: string;
 }
 
 export class LandingHostingStack extends Stack {
@@ -21,12 +31,26 @@ export class LandingHostingStack extends Stack {
   constructor(scope: Construct, id: string, props: LandingHostingStackProps) {
     super(scope, id, props);
 
-    const { projectName, environment, domainName, certificateArn } = props;
+    const { projectName, environment, domainName, certificateArn, hostedZoneId, hostedZoneName } = props;
 
-    // Look up ACM certificate if provided
-    const certificate = certificateArn
-      ? acm.Certificate.fromCertificateArn(this, 'Certificate', certificateArn)
-      : undefined;
+    // Hosted zone — needed for in-stack cert validation + the alias record.
+    const hostedZone =
+      hostedZoneId && hostedZoneName
+        ? route53.HostedZone.fromHostedZoneAttributes(this, 'HostedZone', { hostedZoneId, zoneName: hostedZoneName })
+        : undefined;
+
+    // Certificate (must be us-east-1 for CloudFront): import an existing
+    // ARN, or create a DNS-validated one in-stack when given a domain +
+    // hosted zone — the latter requires this stack to be in us-east-1.
+    let certificate: acm.ICertificate | undefined;
+    if (certificateArn) {
+      certificate = acm.Certificate.fromCertificateArn(this, 'Certificate', certificateArn);
+    } else if (domainName && hostedZone) {
+      certificate = new acm.Certificate(this, 'Certificate', {
+        domainName,
+        validation: acm.CertificateValidation.fromDns(hostedZone),
+      });
+    }
 
     // S3 Bucket for hosting static website
     this.bucket = new s3.Bucket(this, 'WebsiteBucket', {
@@ -84,6 +108,15 @@ function handler(event) {
     });
 
     this.distributionId = this.distribution.distributionId;
+
+    // Route53 alias for the custom domain → this distribution.
+    if (domainName && hostedZone) {
+      new route53.ARecord(this, 'PublicAlias', {
+        zone: hostedZone,
+        recordName: domainName,
+        target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(this.distribution)),
+      });
+    }
 
     // Convert project name to PascalCase for export names
     const toPascalCase = (str: string) =>
