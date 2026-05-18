@@ -366,7 +366,11 @@ h3 {
 
 .hero__image {
   width: 100%;
-  max-width: 800px;
+  /* The hero shot is portrait-aspect (a single app card). Sized
+     like a tablet mockup so the text inside the screenshot stays
+     readable while the hero block doesn't tower over the fold. */
+  max-width: 560px;
+  height: auto;
   border-radius: var(--radius);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--color-border);
 }
