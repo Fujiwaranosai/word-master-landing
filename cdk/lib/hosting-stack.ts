@@ -12,6 +12,19 @@ export interface LandingHostingStackProps extends StackProps {
   projectName: string;
   environment: 'dev' | 'staging' | 'prod';
   domainName?: string;
+  /**
+   * Additional hostnames (e.g. www.vocabmine.com) served by the same
+   * distribution. Each becomes a SAN on the in-stack cert + a Route53
+   * alias record. If `redirectAdditionalToPrimary` is also set, viewer
+   * requests to these hostnames are 301'd to `domainName`.
+   */
+  additionalDomainNames?: string[];
+  /**
+   * When true, requests whose Host header matches one of
+   * `additionalDomainNames` are 301'd to the same path on `domainName`.
+   * Used to make the apex canonical and redirect www -> apex.
+   */
+  redirectAdditionalToPrimary?: boolean;
   /** Import an existing ACM cert by ARN. Mutually exclusive with hostedZoneId. */
   certificateArn?: string;
   /**
@@ -31,7 +44,16 @@ export class LandingHostingStack extends Stack {
   constructor(scope: Construct, id: string, props: LandingHostingStackProps) {
     super(scope, id, props);
 
-    const { projectName, environment, domainName, certificateArn, hostedZoneId, hostedZoneName } = props;
+    const {
+      projectName,
+      environment,
+      domainName,
+      additionalDomainNames = [],
+      redirectAdditionalToPrimary = false,
+      certificateArn,
+      hostedZoneId,
+      hostedZoneName,
+    } = props;
 
     // Hosted zone — needed for in-stack cert validation + the alias record.
     const hostedZone =
@@ -48,6 +70,7 @@ export class LandingHostingStack extends Stack {
     } else if (domainName && hostedZone) {
       certificate = new acm.Certificate(this, 'Certificate', {
         domainName,
+        subjectAlternativeNames: additionalDomainNames.length > 0 ? additionalDomainNames : undefined,
         validation: acm.CertificateValidation.fromDns(hostedZone),
       });
     }
@@ -62,16 +85,34 @@ export class LandingHostingStack extends Stack {
       autoDeleteObjects: false,
     });
 
-    // CloudFront Function to rewrite /path/ → /path/index.html
-    // Required for Astro's directory-style output (e.g. /pricing/index.html)
-    const urlRewriteFunction = new cloudfront.Function(
-      this,
-      'UrlRewriteFunction',
-      {
-        code: cloudfront.FunctionCode.fromInline(`
+    // CloudFront Function — does two things in one viewer-request hook:
+    //   (a) 301-redirect alternate hostnames to the canonical domainName
+    //       (e.g. www.vocabmine.com → vocabmine.com) when
+    //       redirectAdditionalToPrimary is enabled
+    //   (b) rewrite directory URLs → /index.html for Astro's static output
+    //       (e.g. /pricing/ → /pricing/index.html)
+    const altHosts = redirectAdditionalToPrimary && domainName ? additionalDomainNames : [];
+    const fnCode = `
 function handler(event) {
   var request = event.request;
   var uri = request.uri;
+  var host = request.headers.host && request.headers.host.value || '';
+  var altHosts = ${JSON.stringify(altHosts)};
+  var canonical = ${JSON.stringify(domainName || '')};
+  if (canonical && altHosts.indexOf(host) !== -1) {
+    var qs = '';
+    var qsObj = request.querystring || {};
+    var parts = [];
+    for (var k in qsObj) {
+      parts.push(k + (qsObj[k].value ? '=' + qsObj[k].value : ''));
+    }
+    if (parts.length) qs = '?' + parts.join('&');
+    return {
+      statusCode: 301,
+      statusDescription: 'Moved Permanently',
+      headers: { location: { value: 'https://' + canonical + uri + qs } },
+    };
+  }
   if (uri.endsWith('/')) {
     request.uri += 'index.html';
   } else if (!uri.includes('.')) {
@@ -79,9 +120,14 @@ function handler(event) {
   }
   return request;
 }
-        `),
+        `;
+    const urlRewriteFunction = new cloudfront.Function(
+      this,
+      'UrlRewriteFunction',
+      {
+        code: cloudfront.FunctionCode.fromInline(fnCode),
         runtime: cloudfront.FunctionRuntime.JS_2_0,
-        comment: 'Rewrite directory URLs to index.html for Astro static output',
+        comment: 'Astro index.html rewrite + alt-host -> apex 301 redirect',
       },
     );
 
@@ -103,18 +149,31 @@ function handler(event) {
       comment: `${projectName} - ${environment.toUpperCase()}`,
       // Custom domain + certificate (optional)
       ...(domainName && certificate
-        ? { domainNames: [domainName], certificate }
+        ? { domainNames: [domainName, ...additionalDomainNames], certificate }
         : {}),
     });
 
     this.distributionId = this.distribution.distributionId;
 
-    // Route53 alias for the custom domain → this distribution.
+    // Route53 alias for the canonical domain → this distribution.
     if (domainName && hostedZone) {
       new route53.ARecord(this, 'PublicAlias', {
         zone: hostedZone,
         recordName: domainName,
         target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(this.distribution)),
+      });
+    }
+
+    // Route53 aliases for each alternate hostname so they resolve to the
+    // same CloudFront distribution — the CF Function above handles the
+    // 301 to the canonical hostname when redirectAdditionalToPrimary is on.
+    if (hostedZone && additionalDomainNames.length > 0) {
+      additionalDomainNames.forEach((altName, i) => {
+        new route53.ARecord(this, `AltAlias${i}`, {
+          zone: hostedZone,
+          recordName: altName,
+          target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(this.distribution)),
+        });
       });
     }
 
