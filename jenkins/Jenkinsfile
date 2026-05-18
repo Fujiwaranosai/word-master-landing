@@ -75,9 +75,10 @@ pipeline {
         stage('Resolve Region') {
             steps {
                 script {
-                    // Staging static-site stacks (S3 + CloudFront + ACM) are
-                    // in us-east-1; dev/prod use the aws-region credential.
-                    env.DEPLOY_REGION = params.ENVIRONMENT == 'staging' ? 'us-east-1' : env.AWS_REGION
+                    // Staging + prod static-site stacks (S3 + CloudFront + ACM)
+                    // are in us-east-1 because CloudFront requires its certs
+                    // there; dev still uses the default aws-region credential.
+                    env.DEPLOY_REGION = (params.ENVIRONMENT == 'staging' || params.ENVIRONMENT == 'prod') ? 'us-east-1' : env.AWS_REGION
                     echo "Deploy region: ${env.DEPLOY_REGION}"
                 }
             }
