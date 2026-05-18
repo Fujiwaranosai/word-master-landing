@@ -22,6 +22,7 @@ const { Content } = await render(post);
   tags={post.data.tags}
   collectionSlug={post.data.collectionSlug}
   collectionWords={post.data.collectionWords}
+  slug={post.id}
 >
   <Content />
 </BlogPostLayout>

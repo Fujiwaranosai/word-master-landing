@@ -3,10 +3,86 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import FinalCta from '../components/FinalCta.astro';
 import {
   SITE_NAME,
+  SITE_URL,
   APP_REGISTER_URL,
   APP_REGISTER_PRO_URL,
   APP_REGISTER_PREMIUM_URL,
 } from '../consts';
+
+// JSON-LD: SoftwareApplication with offers + the FAQPage block for
+// the six Q&As at the bottom. Google sometimes surfaces the FAQ
+// accordion directly in search results — high CTR win on a query
+// like "vocab mine pricing".
+const pricingSchema = {
+  '@type': 'SoftwareApplication',
+  '@id': `${SITE_URL}/pricing/#software`,
+  name: SITE_NAME,
+  applicationCategory: 'EducationApplication',
+  operatingSystem: 'Web',
+  description: 'AI-powered vocabulary learning app focused on nuance, context, and real-usage mastery.',
+  offers: [
+    {
+      '@type': 'Offer',
+      name: 'Free',
+      price: '0',
+      priceCurrency: 'USD',
+      description: '15 words per month, 5 learning packs per month, all 5 learning modes.',
+    },
+    {
+      '@type': 'Offer',
+      name: 'Pro Monthly',
+      price: '4.99',
+      priceCurrency: 'USD',
+      description: '300 words per month, unlimited learning packs, community sharing.',
+    },
+    {
+      '@type': 'Offer',
+      name: 'Premium Monthly',
+      price: '9.99',
+      priceCurrency: 'USD',
+      description: '1,000 words per month, priority processing queue, advanced analytics.',
+    },
+  ],
+};
+const faqSchema = {
+  '@type': 'FAQPage',
+  '@id': `${SITE_URL}/pricing/#faq`,
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'Can I cancel anytime?',
+      acceptedAnswer: { '@type': 'Answer', text: "Yes, absolutely. There are no contracts or commitments. You can cancel your Pro or Premium subscription at any time, and you'll continue to have access until the end of your billing period." },
+    },
+    {
+      '@type': 'Question',
+      name: "What's the difference between Pro and Premium?",
+      acceptedAnswer: { '@type': 'Answer', text: 'Pro is built for steady learners — 300 new words per month, unlimited learning packs, community sharing & cloning, and full mastery analytics. Premium is for power learners who want to add words at scale: 1,000 words per month, priority processing queue, and advanced analytics. Everything in Pro is included in Premium.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'What happens to my words if I downgrade?',
+      acceptedAnswer: { '@type': 'Answer', text: "You keep all your words and their processed data. You simply won't be able to add more than your new plan's limit (15 words/month and 5 learning packs/month on Free) or use community sharing & cloning until you upgrade again. All 5 learning modes remain available on every plan." },
+    },
+    {
+      '@type': 'Question',
+      name: 'Is my data safe?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Yes. Your data is stored securely on AWS infrastructure with encryption.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'What languages are supported?',
+      acceptedAnswer: { '@type': 'Answer', text: `${SITE_NAME} is designed for English vocabulary learning. All content (definitions, examples, nuances) can be translated to 80+ native languages so you can learn in the way that's most effective for you.` },
+    },
+    {
+      '@type': 'Question',
+      name: 'Can I use it on mobile?',
+      acceptedAnswer: { '@type': 'Answer', text: `Yes! ${SITE_NAME} is a Progressive Web App (PWA), which means it works great on any device with a modern browser. You can add it to your home screen for an app-like experience.` },
+    },
+  ],
+};
+// Wrap multiple page-specific graphs in an ItemList so they share the
+// single ld+json block alongside the site-wide WebSite/Organization.
+const pricingPageSchema = { '@type': 'ItemList', itemListElement: [pricingSchema, faqSchema] };
 ---
 
 <BaseLayout
@@ -17,6 +93,7 @@ import {
   twitterCard="summary"
   canonicalPath="/pricing/"
   currentPage="pricing"
+  pageSchema={pricingPageSchema}
 >
   <!-- Pricing Hero -->
   <section class="pricing-hero">

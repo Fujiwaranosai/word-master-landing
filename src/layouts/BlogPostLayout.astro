@@ -1,7 +1,7 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import CollectionCta from '../components/CollectionCta.astro';
-import { SITE_NAME } from '../consts';
+import { SITE_NAME, SITE_URL } from '../consts';
 
 interface Props {
   title: string;
@@ -11,15 +11,34 @@ interface Props {
   tags?: string[];
   collectionSlug?: string;
   collectionWords?: string[];
+  /** Slug derived from the file name; used to build the article URL. */
+  slug?: string;
 }
 
-const { title, pubDate, description, author, tags = [], collectionSlug, collectionWords } = Astro.props;
+const { title, pubDate, description, author, tags = [], collectionSlug, collectionWords, slug } = Astro.props;
 
 const formattedDate = pubDate.toLocaleDateString('en-US', {
   year: 'numeric',
   month: 'long',
   day: 'numeric',
 });
+
+// Article schema: each blog post emits its own JSON-LD on top of the
+// site-wide WebSite + Organization graphs from BaseLayout. The
+// `mainEntityOfPage` ties the article to its canonical URL.
+const articleUrl = slug ? `${SITE_URL}/blog/${slug}/` : undefined;
+const articleSchema = {
+  '@type': 'Article',
+  '@id': articleUrl ? `${articleUrl}#article` : undefined,
+  headline: title,
+  description,
+  datePublished: pubDate.toISOString(),
+  author: { '@type': 'Organization', name: author, url: SITE_URL },
+  publisher: { '@id': `${SITE_URL}/#organization` },
+  mainEntityOfPage: articleUrl,
+  keywords: tags.join(', '),
+  image: `${SITE_URL}/og-image.png`,
+};
 ---
 
 <BaseLayout
@@ -27,8 +46,11 @@ const formattedDate = pubDate.toLocaleDateString('en-US', {
   description={description}
   ogTitle={title}
   ogDescription={description}
+  ogType="article"
   twitterCard="summary_large_image"
+  canonicalPath={slug ? `/blog/${slug}/` : undefined}
   currentPage="blog"
+  pageSchema={articleSchema}
 >
   <article class="blog-post">
     <div class="container">
