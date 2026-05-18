@@ -180,7 +180,8 @@ pipeline {
                     echo "Deploying static files to S3..."
 
                     withAWS(credentials: 'aws-credentials', region: env.DEPLOY_REGION) {
-                        // Pass 1: HTML files with short cache (5 minutes)
+                        // Pass 1: HTML files — short cache (5 min) so a
+                        // redeploy is visible immediately.
                         sh """
                             aws s3 sync dist/ s3://${env.S3_BUCKET} \
                                 --exclude "*" \
@@ -189,15 +190,30 @@ pipeline {
                                 --region ${env.DEPLOY_REGION}
                         """
 
-                        // Pass 2: CSS, JS, images, SVG with long cache (1 year, immutable)
+                        // Pass 2: Astro hashed bundles under _astro/* —
+                        // filename changes per build → safe to cache
+                        // forever.
                         sh """
                             aws s3 sync dist/ s3://${env.S3_BUCKET} \
-                                --exclude "*.html" \
+                                --exclude "*" \
+                                --include "_astro/*" \
                                 --cache-control "public,max-age=31536000,immutable" \
                                 --region ${env.DEPLOY_REGION}
                         """
 
-                        // Pass 3: Delete files from S3 that no longer exist in dist/
+                        // Pass 3: Everything else (favicon, logo,
+                        // og-image, robots.txt, etc.) — stable filename
+                        // so any redesign would stay cached for users.
+                        // Cap at 1 day.
+                        sh """
+                            aws s3 sync dist/ s3://${env.S3_BUCKET} \
+                                --exclude "*.html" \
+                                --exclude "_astro/*" \
+                                --cache-control "public,max-age=86400" \
+                                --region ${env.DEPLOY_REGION}
+                        """
+
+                        // Pass 4: Delete files from S3 that no longer exist in dist/
                         sh """
                             aws s3 sync dist/ s3://${env.S3_BUCKET} \
                                 --delete \
