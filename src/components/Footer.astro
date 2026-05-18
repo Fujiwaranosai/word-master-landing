@@ -1,5 +1,5 @@
 ---
-import { SITE_NAME, SITE_DESCRIPTION, TEAM_NAME } from '../consts';
+import { SITE_NAME, SITE_DESCRIPTION, SUPPORT_EMAIL, TEAM_NAME } from '../consts';
 ---
 
 <footer class="footer">
@@ -24,6 +24,10 @@ import { SITE_NAME, SITE_DESCRIPTION, TEAM_NAME } from '../consts';
           <h4>Legal</h4>
           <a href="/terms/">Terms of Service</a>
           <a href="/privacy/">Privacy Policy</a>
+        </div>
+        <div class="footer__col">
+          <h4>Support</h4>
+          <a href={`mailto:${SUPPORT_EMAIL}`}>Contact Us</a>
         </div>
       </div>
     </div>

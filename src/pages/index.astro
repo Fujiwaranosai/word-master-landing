@@ -20,37 +20,19 @@ import { SITE_NAME, APP_URL } from '../consts';
       <h1>Master Words, Not Just Memorize Them</h1>
       <p class="hero__sub">Learn vocabulary the way your brain works &mdash; through nuance, context, and real usage. Powered by AI.</p>
       <div class="hero__actions">
-        <a href={APP_URL} class="btn btn--primary btn--large" data-ga-cta="start_learning_free" data-ga-location="hero">Start Learning for Free</a>
+        <a href={APP_URL} class="btn btn--primary btn--large" data-ga-cta="get_started_free" data-ga-location="hero">Get Started Free</a>
         <a href="/pricing/" class="btn btn--secondary btn--large" data-ga-cta="see_pricing" data-ga-location="hero">See Pricing</a>
       </div>
       <div class="hero__visual">
-        <svg class="hero__image" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
-          <rect width="800" height="450" rx="12" fill="#f1f5f9"/>
-          <rect x="40" y="30" width="720" height="48" rx="8" fill="#e2e8f0"/>
-          <rect x="40" y="100" width="340" height="310" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
-          <rect x="60" y="120" width="180" height="20" rx="4" fill="#2563eb" opacity="0.2"/>
-          <rect x="60" y="152" width="300" height="14" rx="4" fill="#e2e8f0"/>
-          <rect x="60" y="176" width="260" height="14" rx="4" fill="#e2e8f0"/>
-          <rect x="60" y="210" width="120" height="28" rx="6" fill="#2563eb" opacity="0.15"/>
-          <rect x="190" y="210" width="80" height="28" rx="6" fill="#10b981" opacity="0.15"/>
-          <rect x="60" y="260" width="300" height="14" rx="4" fill="#e2e8f0"/>
-          <rect x="60" y="284" width="280" height="14" rx="4" fill="#e2e8f0"/>
-          <rect x="60" y="320" width="300" height="14" rx="4" fill="#e2e8f0"/>
-          <rect x="60" y="344" width="240" height="14" rx="4" fill="#e2e8f0"/>
-          <rect x="420" y="100" width="340" height="150" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
-          <rect x="440" y="120" width="100" height="16" rx="4" fill="#2563eb" opacity="0.3"/>
-          <rect x="440" y="148" width="300" height="12" rx="4" fill="#e2e8f0"/>
-          <rect x="440" y="170" width="280" height="12" rx="4" fill="#e2e8f0"/>
-          <rect x="440" y="200" width="140" height="32" rx="6" fill="#2563eb"/>
-          <rect x="420" y="270" width="340" height="140" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
-          <rect x="440" y="290" width="80" height="16" rx="4" fill="#10b981" opacity="0.3"/>
-          <circle cx="460" cy="340" r="20" fill="#2563eb" opacity="0.1"/>
-          <circle cx="520" cy="340" r="20" fill="#10b981" opacity="0.1"/>
-          <circle cx="580" cy="340" r="20" fill="#f59e0b" opacity="0.1"/>
-          <circle cx="640" cy="340" r="20" fill="#ef4444" opacity="0.1"/>
-          <rect x="440" y="380" width="200" height="14" rx="4" fill="#e2e8f0"/>
-          <text x="400" y="442" text-anchor="middle" fill="#94a3b8" font-size="12" font-family="sans-serif">App Screenshot Placeholder</text>
-        </svg>
+        <img
+          class="hero__image"
+          src="/images/hero-word-detail.png"
+          alt="A word detail page in Vocab Mine showing IPA pronunciation, multiple definitions, example sentences, and related words with nuance explanations."
+          width="1200"
+          height="780"
+          loading="eager"
+          fetchpriority="high"
+        />
       </div>
     </div>
   </section>
@@ -117,7 +99,7 @@ import { SITE_NAME, APP_URL } from '../consts';
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="#2563EB" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="#2563EB" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="#2563EB" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="#2563EB" stroke-width="2"/></svg>
           </div>
           <h3>5 Learning Modes</h3>
-          <p>From flashcards to writing practice with AI grading &mdash; progressive skill building that takes you from recognition to production.</p>
+          <p>Meaning Memorization, Nuance Learning, Right Word Selection, Right Sentence Selection, and Writing Practice with AI grading. Progressive skill building from recognition to production.</p>
         </div>
         <div class="feature-card fade-in">
           <div class="feature-card__icon">
@@ -130,15 +112,15 @@ import { SITE_NAME, APP_URL } from '../consts';
           <div class="feature-card__icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
-          <h3>Smart Collections</h3>
-          <p>Organize words into themed groups, then learn entire collections as packs. Build your vocabulary strategically.</p>
+          <h3>Smart Collections &amp; Community</h3>
+          <p>Organize words into themed groups, then learn entire collections as packs. Pro learners can share collections to the community and clone what others publish.</p>
         </div>
         <div class="feature-card fade-in">
           <div class="feature-card__icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
           <h3>Track Your Mastery</h3>
-          <p>6-level mastery system with XP, streaks, and achievement badges. See your progress and stay motivated.</p>
+          <p>6-level mastery progression that climbs as you practice, with a daily learning streak and a real activity feed of every word added, mastered, and pack completed.</p>
         </div>
       </div>
     </div>
@@ -181,8 +163,8 @@ import { SITE_NAME, APP_URL } from '../consts';
           <div class="stat__label">Learning Modes</div>
         </div>
         <div class="stat fade-in">
-          <div class="stat__number">50+</div>
-          <div class="stat__label">Languages Supported</div>
+          <div class="stat__number">80+</div>
+          <div class="stat__label">Native Languages</div>
         </div>
         <div class="stat fade-in">
           <div class="stat__number">6</div>
