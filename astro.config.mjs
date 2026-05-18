@@ -14,7 +14,7 @@ function seoIntegration() {
         // allowed. The sitemap file is always emitted (cheap); robots
         // is what actually gates crawling.
         const robotsTxt = allowIndexing
-          ? 'User-agent: *\nDisallow:\n\nSitemap: https://vocabmaster.nhatbui.link/sitemap-index.xml\n'
+          ? 'User-agent: *\nDisallow:\n\nSitemap: https://vocabmine.com/sitemap-index.xml\n'
           : 'User-agent: *\nDisallow: /\n';
 
         const outDir = fileURLToPath(dir);
@@ -27,7 +27,7 @@ function seoIntegration() {
 
 export default defineConfig({
   output: 'static',
-  site: 'https://vocabmaster.nhatbui.link',
+  site: 'https://vocabmine.com',
   // @astrojs/sitemap runs before seoIntegration so the sitemap file
   // is written first; seoIntegration then finalises robots.txt that
   // references it.

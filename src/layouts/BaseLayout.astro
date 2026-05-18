@@ -1,6 +1,7 @@
 ---
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
+import { SITE_NAME, SITE_DESCRIPTION, SUPPORT_EMAIL } from '../consts';
 import '../styles/global.css';
 
 interface Props {
@@ -12,6 +13,13 @@ interface Props {
   twitterCard?: string;
   canonicalPath?: string;
   currentPage?: string;
+  /**
+   * Optional per-page JSON-LD blob. The layout always emits the
+   * site-wide WebSite + Organization graphs; pass `pageSchema` to
+   * append page-specific schema (SoftwareApplication for pricing,
+   * Article for blog posts, etc.) without re-declaring the root.
+   */
+  pageSchema?: unknown;
 }
 
 const {
@@ -23,14 +31,43 @@ const {
   twitterCard,
   canonicalPath,
   currentPage = '',
+  pageSchema,
 } = Astro.props;
 
-const siteUrl = 'https://vocabmaster.nhatbui.link';
+const siteUrl = 'https://vocabmine.com';
 const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : undefined;
 // Default OG / Twitter card image. Lives in /public so it's served at
 // the site root and is the URL we reference in social meta tags.
 // Individual pages can override later by adding an `ogImage` prop.
 const ogImageUrl = `${siteUrl}/og-image.png`;
+
+// Site-wide JSON-LD: WebSite (gets sitelinks search box if Google
+// honours it) + Organization (knowledge-panel sidebar). Page-specific
+// schema (SoftwareApplication, Article, FAQPage) is appended via the
+// optional `pageSchema` prop so each page declares its own without
+// duplicating the root graphs.
+const siteSchemaGraph = [
+  {
+    '@type': 'WebSite',
+    '@id': `${siteUrl}/#website`,
+    url: siteUrl,
+    name: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    publisher: { '@id': `${siteUrl}/#organization` },
+  },
+  {
+    '@type': 'Organization',
+    '@id': `${siteUrl}/#organization`,
+    name: SITE_NAME,
+    url: siteUrl,
+    logo: { '@type': 'ImageObject', url: `${siteUrl}/logo512.png` },
+    email: SUPPORT_EMAIL,
+  },
+];
+const schemaPayload = {
+  '@context': 'https://schema.org',
+  '@graph': pageSchema ? [...siteSchemaGraph, pageSchema] : siteSchemaGraph,
+};
 const allowIndexing = import.meta.env.PUBLIC_ALLOW_INDEXING === 'true';
 const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 
@@ -76,6 +113,12 @@ const embedMode = Astro.url.searchParams.get('embed') === 'app';
   {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
   <link rel="icon" type="image/png" sizes="192x192" href="/logo192.png" />
   <link rel="apple-touch-icon" href="/logo192.png" />
+  {/* JSON-LD structured data — emitted only when indexing is allowed
+      so dev/staging environments don't pollute Google's understanding
+      of the site with non-canonical hostnames. */}
+  {allowIndexing && (
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaPayload)} />
+  )}
   {gaMeasurementId && (
     <>
       <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}></script>
