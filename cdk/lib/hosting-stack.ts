@@ -5,7 +5,7 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import { CfnOutput, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 export interface LandingHostingStackProps extends StackProps {
@@ -147,6 +147,14 @@ function handler(event) {
       },
       defaultRootObject: 'index.html',
       comment: `${projectName} - ${environment.toUpperCase()}`,
+      // Map S3's AccessDenied (403, for missing keys) and 404 to the
+      // Astro-built /404.html so users see a real "page not found"
+      // instead of raw CloudFront/S3 XML. 5-min TTL on the error response
+      // so a redeploy is reflected quickly.
+      errorResponses: [
+        { httpStatus: 403, responseHttpStatus: 404, responsePagePath: '/404.html', ttl: Duration.minutes(5) },
+        { httpStatus: 404, responseHttpStatus: 404, responsePagePath: '/404.html', ttl: Duration.minutes(5) },
+      ],
       // Custom domain + certificate (optional)
       ...(domainName && certificate
         ? { domainNames: [domainName, ...additionalDomainNames], certificate }
