@@ -64,9 +64,13 @@ const siteSchemaGraph = [
     email: SUPPORT_EMAIL,
   },
 ];
+// `pageSchema` may be a single object or an array of objects (e.g. a
+// page that wants both SoftwareApplication + FAQPage). Flatten so both
+// shapes land at the top level of `@graph` instead of being nested.
+const pageSchemaItems = Array.isArray(pageSchema) ? pageSchema : pageSchema ? [pageSchema] : [];
 const schemaPayload = {
   '@context': 'https://schema.org',
-  '@graph': pageSchema ? [...siteSchemaGraph, pageSchema] : siteSchemaGraph,
+  '@graph': [...siteSchemaGraph, ...pageSchemaItems],
 };
 const allowIndexing = import.meta.env.PUBLIC_ALLOW_INDEXING === 'true';
 const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;

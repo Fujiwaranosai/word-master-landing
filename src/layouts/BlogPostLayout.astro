@@ -39,6 +39,21 @@ const articleSchema = {
   keywords: tags.join(', '),
   image: `${SITE_URL}/og-image.png`,
 };
+
+// Breadcrumbs let Google show "vocabmine.com > Blog > Article Title"
+// in SERP instead of the raw URL. Only emitted when we have a slug.
+const breadcrumbSchema = articleUrl
+  ? {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+        { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blog/` },
+        { '@type': 'ListItem', position: 3, name: title, item: articleUrl },
+      ],
+    }
+  : undefined;
+
+const pageSchema = breadcrumbSchema ? [articleSchema, breadcrumbSchema] : articleSchema;
 ---
 
 <BaseLayout
@@ -50,7 +65,7 @@ const articleSchema = {
   twitterCard="summary_large_image"
   canonicalPath={slug ? `/blog/${slug}/` : undefined}
   currentPage="blog"
-  pageSchema={articleSchema}
+  pageSchema={pageSchema}
 >
   <article class="blog-post">
     <div class="container">
