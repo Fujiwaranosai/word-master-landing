@@ -15,24 +15,54 @@ import { SITE_NAME, APP_URL } from '../consts';
 >
   <!-- Hero -->
   <section class="hero">
-    <div class="container">
-      <div class="hero__badge">AI-Powered Vocabulary Learning</div>
-      <h1>Master Words, Not Just Memorize Them</h1>
-      <p class="hero__sub">Learn vocabulary the way your brain works &mdash; through nuance, context, and real usage. Powered by AI.</p>
-      <div class="hero__actions">
-        <a href={APP_URL} class="btn btn--primary btn--large" data-ga-cta="get_started_free" data-ga-location="hero">Get Started Free</a>
-        <a href="/pricing/" class="btn btn--secondary btn--large" data-ga-cta="see_pricing" data-ga-location="hero">See Pricing</a>
+    <div class="container hero__inner">
+      <div class="hero__copy">
+        <div class="hero__badge">Powered by AI</div>
+        <h1>Master English Vocabulary with <span class="accent">AI</span></h1>
+        <p class="hero__sub">Add words, learn meanings, practice with exercise and master vocabulary faster.</p>
+        <div class="hero__actions">
+          <a href={APP_URL} class="btn btn--primary btn--large" data-ga-cta="get_started_free" data-ga-location="hero">Get Started Free</a>
+          <a href="/#how-it-works" class="btn btn--demo btn--large" data-ga-cta="see_demo" data-ga-location="hero">See Demo</a>
+        </div>
       </div>
       <div class="hero__visual">
-        <img
-          class="hero__image"
-          src="/images/hero-word-detail.png"
-          alt="The 'Related Words & Nuances' card in Vocab Mine showing six near-synonyms for the word ephemeral — transient, fleeting, momentary, evanescent, temporary, impermanent — each with a nuance explanation and example sentences."
-          width="852"
-          height="1112"
-          loading="eager"
-          fetchpriority="high"
-        />
+        <!-- Dashboard preview mock (decorative). aria-hidden so screen
+             readers skip the illustrative numbers. -->
+        <div class="dash" aria-hidden="true">
+          <div class="dash__bar">
+            <div class="dash__dots"><span></span><span></span><span></span></div>
+            <span class="dash__url">vocabmine.com/dashboard</span>
+          </div>
+          <div class="dash__row">
+            <div class="dash__stat">
+              <div class="dash__stat-label">Total Words</div>
+              <div class="dash__stat-value">248</div>
+              <div class="dash__stat-delta">&uarr; +12 this week</div>
+              <div class="dash__track"><div class="dash__fill" style="width: 72%"></div></div>
+            </div>
+            <div class="dash__stat">
+              <div class="dash__stat-label">Mastered</div>
+              <div class="dash__stat-value">143</div>
+              <div class="dash__stat-delta">&uarr; 58% rate</div>
+              <div class="dash__track"><div class="dash__fill" style="width: 58%"></div></div>
+            </div>
+          </div>
+          <div class="dash__recent">
+            <div class="dash__recent-title">Recent Words</div>
+            <div class="dash__recent-item">
+              <span class="dash__recent-word">Insightful</span>
+              <span class="dash__chip dash__chip--mastered">Mastered</span>
+            </div>
+            <div class="dash__recent-item">
+              <span class="dash__recent-word">Eloquent</span>
+              <span class="dash__chip dash__chip--learning">Learning</span>
+            </div>
+            <div class="dash__recent-item">
+              <span class="dash__recent-word">Resilient</span>
+              <span class="dash__chip dash__chip--new">New</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -108,54 +138,55 @@ import { SITE_NAME, APP_URL } from '../consts';
     </div>
   </section>
 
-  <!-- Features -->
-  <section class="section section--alt" id="features">
+  <!-- Features (Vocab Mine 2 design — Page 3: six cards in a 3x2 grid,
+       each with a light-cyan icon tile, on a cream surface) -->
+  <section class="features section--cream-alt" id="features">
     <div class="container text-center">
-      <span class="section__label">Features</span>
-      <h2>Everything You Need to Truly Know a Word</h2>
-      <p class="section__subtitle">{SITE_NAME} goes beyond definitions to give you deep, contextual understanding of every word you learn.</p>
+      <span class="section__eyebrow">FEATURES</span>
+      <h2 class="section__title">Everything You Need to Learn</h2>
+      <p class="section__lead">Comprehensive tools designed to make vocabulary acquisition natural and lasting.</p>
       <div class="features__grid">
-        <div class="feature-card fade-in">
-          <div class="feature-card__icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="feat-card fade-in">
+          <div class="feat-card__icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 3l1.6 4.2L18 8.8l-3.4 2.7 1.2 4.3L12 13.6 8.2 15.8l1.2-4.3L6 8.8l4.4-1.6L12 3z" stroke="#3b82f6" stroke-width="1.8" stroke-linejoin="round"/><path d="M5 19h9" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round"/></svg>
           </div>
-          <h3>Deep Word Intelligence</h3>
-          <p>AI processes each word for IPA pronunciation, multiple definitions, example sentences, phrasal verbs, collocations, idioms, and related words with nuance explanations.</p>
+          <h3>AI Definitions</h3>
+          <p>Context-aware definitions generated instantly for any word, tailored to your proficiency level.</p>
         </div>
-        <div class="feature-card fade-in">
-          <div class="feature-card__icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#2563EB" stroke-width="2"/><path d="M8 12l2.5 2.5L16 9" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="feat-card fade-in">
+          <div class="feat-card__icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M4 9v6h4l5 4V5L8 9H4z" stroke="#3b82f6" stroke-width="1.8" stroke-linejoin="round"/><path d="M16.5 8.5a5 5 0 010 7M19 6a8 8 0 010 12" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round"/></svg>
           </div>
-          <h3>Learn the Nuances</h3>
-          <p>Understand subtle differences between similar words. Know when to use "interesting" vs "fascinating" vs "intriguing" &mdash; and why it matters.</p>
+          <h3>Pronunciation</h3>
+          <p>IPA phonetics and audio pronunciation to ensure you learn how to say every word correctly.</p>
         </div>
-        <div class="feature-card fade-in">
-          <div class="feature-card__icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="#2563EB" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="#2563EB" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="#2563EB" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="#2563EB" stroke-width="2"/></svg>
+        <div class="feat-card fade-in">
+          <div class="feat-card__icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="#3b82f6" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 8h10M7 12h6" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round"/></svg>
           </div>
-          <h3>5 Learning Modes</h3>
-          <p>Meaning Memorization, Nuance Learning, Right Word Selection, Right Sentence Selection, and Writing Practice with AI grading. Progressive skill building from recognition to production.</p>
+          <h3>Examples</h3>
+          <p>Multiple real-world usage examples showing how each word is naturally used in context.</p>
         </div>
-        <div class="feature-card fade-in">
-          <div class="feature-card__icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="#2563EB" stroke-width="2"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" stroke="#2563EB" stroke-width="2"/></svg>
+        <div class="feat-card fade-in">
+          <div class="feat-card__icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#3b82f6" stroke-width="1.8"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round"/></svg>
           </div>
-          <h3>Your Language, Your Way</h3>
-          <p>All content translated to your native language with per-item translation toggles. Learn in the way that works best for you.</p>
+          <h3>Translations</h3>
+          <p>Accurate translations into your native language to anchor meaning with familiar ground.</p>
         </div>
-        <div class="feature-card fade-in">
-          <div class="feature-card__icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="feat-card fade-in">
+          <div class="feat-card__icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 5-9 5-9-5 9-5z" stroke="#3b82f6" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 13l9 5 9-5" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
-          <h3>Smart Collections &amp; Community</h3>
-          <p>Organize words into themed groups, then learn entire collections as packs. Pro learners can share collections to the community and clone what others publish.</p>
+          <h3>Learning Packs</h3>
+          <p>Pre-built and custom word collections organized by topic, difficulty or your personal goals.</p>
         </div>
-        <div class="feature-card fade-in">
-          <div class="feature-card__icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="feat-card fade-in">
+          <div class="feat-card__icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V17a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#3b82f6" stroke-width="1.8" stroke-linejoin="round"/></svg>
           </div>
-          <h3>Track Your Mastery</h3>
-          <p>6-level mastery progression that climbs as you practice, with a daily learning streak and a real activity feed of every word added, mastered, and pack completed.</p>
+          <h3>Collections</h3>
+          <p>Organize words into personal collections - by project, book, conversation or any theme.</p>
         </div>
       </div>
     </div>
@@ -227,27 +258,33 @@ import { SITE_NAME, APP_URL } from '../consts';
     </div>
   </section>
 
-  <!-- How It Works -->
-  <section class="section section--alt" id="how-it-works">
+  <!-- How It Works (Vocab Mine 2 design — Page 2: four numbered step cards
+       with gradient badges and connector lines, on a cream surface) -->
+  <section class="how section--cream" id="how-it-works">
     <div class="container text-center">
-      <span class="section__label">How It Works</span>
-      <h2>Three Steps to Vocabulary Mastery</h2>
-      <p class="section__subtitle">Simple process, powerful results. Start learning in seconds.</p>
-      <div class="steps">
-        <div class="step fade-in">
-          <div class="step__number">1</div>
-          <h3>Add Any Word or Phrase</h3>
-          <p>Type any English word or phrase. AI processes it in seconds, pulling definitions, pronunciation, examples, and more.</p>
+      <span class="section__eyebrow">HOW IT WORKS</span>
+      <h2 class="section__title">Four Steps to Vocabulary Mastery</h2>
+      <p class="section__lead">Our AI-powered approach makes learning new words efficient, engaging and effective.</p>
+      <div class="how__steps">
+        <div class="how-card fade-in">
+          <div class="how-card__badge">1</div>
+          <h3>Add a word</h3>
+          <p>Type any English word you want to learn. Import from text or let AI suggest words based on your level.</p>
         </div>
-        <div class="step fade-in">
-          <div class="step__number">2</div>
-          <h3>Explore Its Depth</h3>
-          <p>See definitions, nuances between similar words, real-world examples, collocations, idioms &mdash; all translated to your language.</p>
+        <div class="how-card fade-in">
+          <div class="how-card__badge">2</div>
+          <h3>AI Generates Content</h3>
+          <p>Our AI instantly creates definitions, pronunciations, synonyms, translations and example sentences.</p>
         </div>
-        <div class="step fade-in">
-          <div class="step__number">3</div>
-          <h3>Master Through Practice</h3>
-          <p>Progressive exercises from flashcards to writing practice. AI grades your output and helps you truly own each word.</p>
+        <div class="how-card fade-in">
+          <div class="how-card__badge">3</div>
+          <h3>Practice</h3>
+          <p>Reinforce learning through quizzes, flashcards and spaced repetition exercises tailored to you.</p>
+        </div>
+        <div class="how-card fade-in">
+          <div class="how-card__badge">4</div>
+          <h3>Master</h3>
+          <p>Track progress, build streaks and watch your vocabulary grow measurably over time.</p>
         </div>
       </div>
     </div>
