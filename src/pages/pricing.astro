@@ -98,13 +98,14 @@ const pricingPageSchema = { '@type': 'ItemList', itemListElement: [pricingSchema
   <!-- Pricing Hero -->
   <section class="pricing-hero">
     <div class="container">
-      <h1>Simple, Transparent Pricing</h1>
-      <p>Start free. Upgrade when you're ready.</p>
+      <span class="pricing-hero__badge">Pricing</span>
+      <h1>Choose your {SITE_NAME} plan</h1>
+      <p>Unlock higher monthly limits, advanced learning tools, and a community of learners.</p>
     </div>
   </section>
 
   <!-- Pricing Cards -->
-  <section class="section">
+  <section class="section pricing-section">
     <div class="container">
       <!-- Monthly / Annual toggle -->
       <div class="billing-toggle__wrap">
@@ -151,7 +152,7 @@ const pricingPageSchema = { '@type': 'ItemList', itemListElement: [pricingSchema
             <li class="disabled">Community sharing &amp; cloning</li>
             <li class="disabled">Priority support</li>
           </ul>
-          <a href={APP_REGISTER_URL} class="btn btn--secondary" data-ga-cta="get_started_free" data-ga-location="pricing_card_free">Get Started</a>
+          <a href={APP_REGISTER_URL} class="btn btn--secondary" data-ga-cta="get_started_free" data-ga-location="pricing_card_free">Get Started Free</a>
         </div>
 
         <!-- Pro Plan -->
@@ -180,7 +181,7 @@ const pricingPageSchema = { '@type': 'ItemList', itemListElement: [pricingSchema
             <li>Community sharing &amp; cloning</li>
             <li>Priority email support</li>
           </ul>
-          <a href={APP_REGISTER_PRO_URL} class="btn btn--primary" data-ga-cta="start_pro" data-ga-location="pricing_card_pro">Start Pro</a>
+          <a href={APP_REGISTER_PRO_URL} class="btn btn--primary" data-ga-cta="start_pro" data-ga-location="pricing_card_pro">Get Pro</a>
         </div>
 
         <!-- Premium Plan -->
@@ -209,35 +210,37 @@ const pricingPageSchema = { '@type': 'ItemList', itemListElement: [pricingSchema
             <li>Advanced learning analytics</li>
             <li>Best for power learners</li>
           </ul>
-          <a href={APP_REGISTER_PREMIUM_URL} class="btn btn--primary" data-ga-cta="start_premium" data-ga-location="pricing_card_premium">Start Premium</a>
+          <a href={APP_REGISTER_PREMIUM_URL} class="btn btn--primary" data-ga-cta="start_premium" data-ga-location="pricing_card_premium">Get Premium</a>
         </div>
       </div>
+
+      <p class="pricing-footnote">Secure payment processed by <strong>Polar</strong>. Cancel anytime from your Settings page.</p>
 
       <!-- FAQ -->
       <div class="faq">
         <h2 class="text-center" style="margin-bottom: 8px;">Frequently Asked Questions</h2>
-        <div class="faq__item fade-in">
-          <div class="faq__question">Can I cancel anytime?</div>
+        <div class="faq__item fade-in" data-open="false">
+          <button type="button" class="faq__question" aria-expanded="false">Can I cancel anytime?</button>
           <div class="faq__answer">Yes, absolutely. There are no contracts or commitments. You can cancel your Pro or Premium subscription at any time, and you'll continue to have access until the end of your billing period.</div>
         </div>
-        <div class="faq__item fade-in">
-          <div class="faq__question">What's the difference between Pro and Premium?</div>
-          <div class="faq__answer">Pro is built for steady learners — 300 new words per month, unlimited learning packs, community sharing &amp; cloning, and full mastery analytics. Premium is for power learners who want to add words at scale: 1,000 words per month, priority processing queue, and advanced analytics. Everything in Pro is included in Premium.</div>
+        <div class="faq__item fade-in" data-open="false">
+          <button type="button" class="faq__question" aria-expanded="false">What's the difference between Pro and Premium?</button>
+          <div class="faq__answer">Pro is built for steady learners: 300 new words per month, unlimited learning packs, community sharing &amp; cloning, and full mastery analytics. Premium is for power learners who want to add words at scale: 1,000 words per month, priority processing queue, and advanced analytics. Everything in Pro is included in Premium.</div>
         </div>
-        <div class="faq__item fade-in">
-          <div class="faq__question">What happens to my words if I downgrade?</div>
+        <div class="faq__item fade-in" data-open="false">
+          <button type="button" class="faq__question" aria-expanded="false">What happens to my words if I downgrade?</button>
           <div class="faq__answer">You keep all your words and their processed data. You simply won't be able to add more than your new plan's limit (15 words/month and 5 learning packs/month on Free) or use community sharing &amp; cloning until you upgrade again. All 5 learning modes remain available on every plan.</div>
         </div>
-        <div class="faq__item fade-in">
-          <div class="faq__question">Is my data safe?</div>
+        <div class="faq__item fade-in" data-open="false">
+          <button type="button" class="faq__question" aria-expanded="false">Is my data safe?</button>
           <div class="faq__answer">Yes. Your data is stored securely on AWS infrastructure with encryption. See our <a href="/privacy/">Privacy Policy</a> for full details on how we handle your information.</div>
         </div>
-        <div class="faq__item fade-in">
-          <div class="faq__question">What languages are supported?</div>
+        <div class="faq__item fade-in" data-open="false">
+          <button type="button" class="faq__question" aria-expanded="false">What languages are supported?</button>
           <div class="faq__answer">{SITE_NAME} is designed for English vocabulary learning. All content (definitions, examples, nuances) can be translated to 80+ native languages so you can learn in the way that's most effective for you.</div>
         </div>
-        <div class="faq__item fade-in">
-          <div class="faq__question">Can I use it on mobile?</div>
+        <div class="faq__item fade-in" data-open="false">
+          <button type="button" class="faq__question" aria-expanded="false">Can I use it on mobile?</button>
           <div class="faq__answer">Yes! {SITE_NAME} is a Progressive Web App (PWA), which means it works great on any device with a modern browser. You can add it to your home screen for an app-like experience.</div>
         </div>
       </div>
@@ -267,6 +270,29 @@ const pricingPageSchema = { '@type': 'ItemList', itemListElement: [pricingSchema
 
       monthlyBtn.addEventListener('click', function () { setPeriod('monthly'); });
       annualBtn.addEventListener('click', function () { setPeriod('annual'); });
+    })();
+  </script>
+
+  <script is:inline>
+    // FAQ accordion: one open at a time, matching the Vocab Mine 2 design.
+    (function () {
+      var items = document.querySelectorAll('.faq .faq__item');
+      items.forEach(function (item) {
+        var btn = item.querySelector('.faq__question');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+          var isOpen = item.getAttribute('data-open') === 'true';
+          items.forEach(function (other) {
+            other.setAttribute('data-open', 'false');
+            var b = other.querySelector('.faq__question');
+            if (b) b.setAttribute('aria-expanded', 'false');
+          });
+          if (!isOpen) {
+            item.setAttribute('data-open', 'true');
+            btn.setAttribute('aria-expanded', 'true');
+          }
+        });
+      });
     })();
   </script>
 </BaseLayout>

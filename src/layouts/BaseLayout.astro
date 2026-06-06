@@ -82,24 +82,32 @@ const embedMode = Astro.url.searchParams.get('embed') === 'app';
 ---
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <script is:inline>
     // No-flash theme bootstrap. Runs synchronously before paint so the
     // [data-theme] attribute is already set when the body styles apply.
+    // Light is the default brand look (matches the Vocab Mine 2 design);
+    // we only switch to dark when the user has explicitly toggled it
+    // (persisted in localStorage). The html tag ships with
+    // data-theme="light" so the default holds even with JS disabled.
     (function () {
       try {
         var stored = localStorage.getItem('vocabmine-theme');
-        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        var theme = stored || (prefersDark ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute('data-theme', stored || 'light');
       } catch (_) {
-        /* localStorage blocked / SSR fallback — leave as light (default). */
+        /* localStorage blocked — the data-theme="light" on <html> stands. */
       }
     })();
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  />
   <title>{title}</title>
   {!allowIndexing && <meta name="robots" content="noindex, nofollow" />}
   {description && <meta name="description" content={description} />}
