@@ -1759,7 +1759,10 @@ body.embed-app .legal {
     right: 0;
     height: calc(100vh - var(--nav-height));
     z-index: 200;
-    background: var(--color-bg);
+    /* Keep the drawer the same deep blue as the nav bar in BOTH themes:
+       the nav items (links, theme toggle, Login) are styled white for the
+       always-blue bar, so a light drawer bg would make them invisible. */
+    background: #0c1436;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
