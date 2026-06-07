@@ -9,6 +9,12 @@ interface Props {
   description?: string;
   ogTitle?: string;
   ogDescription?: string;
+  /**
+   * Per-page OG / Twitter card image. Falls back to the site-wide
+   * og-image.png. Blog post pages pass their cover image so social
+   * shares pick up a per-article preview instead of the generic one.
+   */
+  ogImage?: string;
   ogType?: string;
   twitterCard?: string;
   canonicalPath?: string;
@@ -27,6 +33,7 @@ const {
   description,
   ogTitle,
   ogDescription,
+  ogImage,
   ogType = 'website',
   twitterCard,
   canonicalPath,
@@ -38,8 +45,9 @@ const siteUrl = 'https://vocabmine.com';
 const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : undefined;
 // Default OG / Twitter card image. Lives in /public so it's served at
 // the site root and is the URL we reference in social meta tags.
-// Individual pages can override later by adding an `ogImage` prop.
-const ogImageUrl = `${siteUrl}/og-image.png`;
+// Pages override via the optional `ogImage` prop (e.g. blog posts pass
+// the article's cover image).
+const ogImageUrl = ogImage || `${siteUrl}/og-image.png`;
 
 // Site-wide JSON-LD: WebSite (gets sitelinks search box if Google
 // honours it) + Organization (knowledge-panel sidebar). Page-specific
