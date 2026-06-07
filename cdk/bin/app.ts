@@ -54,15 +54,16 @@ new LandingHostingStack(app, `${projectNamePascal}-staging-Hosting`, {
   hostedZoneName: 'vocabmine.com',
 });
 
-// Prod — primary domain is www.vocabmine.com. Apex (vocabmine.com) is
-// handled by an alternate-domain-name on the same distribution; a CF
-// Function rewrites apex requests to www to keep one canonical host.
-// (Function code lives in the FrontendHostingStack — see comment there.)
+// Prod — canonical hostname is the apex vocabmine.com. www.vocabmine.com
+// is also served by this distribution but a CF Function 301-redirects
+// it to the apex so there's only one canonical URL.
 new LandingHostingStack(app, `${projectNamePascal}-prod-Hosting`, {
   env: { account: process.env.AWS_ACCOUNT_ID!, region: 'us-east-1' },
   projectName,
   environment: 'prod',
-  domainName: 'www.vocabmine.com',
+  domainName: 'vocabmine.com',
+  additionalDomainNames: ['www.vocabmine.com'],
+  redirectAdditionalToPrimary: true,
   hostedZoneId: 'Z01207665E0BNZZX7Z7H',
   hostedZoneName: 'vocabmine.com',
 });
