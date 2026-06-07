@@ -1,11 +1,15 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
 import { SITE_NAME } from '../../consts';
+import { fetchPublishedArticles } from '../../lib/blog-articles';
 
-const posts = (await getCollection('blog')).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
+/**
+ * Blog index — now sourced from the admin API at build time (Vikunja #76)
+ * instead of `getCollection('blog')` over local .md files. The article
+ * row is the source of truth; the landing site is a stale-on-deploy
+ * snapshot rebuilt by the landing Jenkins job after publishing.
+ */
+const posts = await fetchPublishedArticles();
 ---
 
 <BaseLayout
@@ -22,28 +26,25 @@ const posts = (await getCollection('blog')).sort(
       </div>
       <div class="blog-listing__grid">
         {posts.map((post) => {
-          const formattedDate = post.data.pubDate.toLocaleDateString('en-US', {
+          const pubDate = post.publishedAt ? new Date(post.publishedAt) : new Date(post.createdAt);
+          const formattedDate = pubDate.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
           });
           return (
-            <a href={`/blog/${post.id}/`} class="blog-card fade-in">
+            <a href={`/blog/${post.slug}/`} class="blog-card fade-in">
               <div class="blog-card__content">
-                <time datetime={post.data.pubDate.toISOString()}>{formattedDate}</time>
-                <h2>{post.data.title}</h2>
-                <p>{post.data.description}</p>
-                {post.data.tags.length > 0 && (
-                  <div class="blog-card__tags">
-                    {post.data.tags.map((tag) => (
-                      <span class="blog-card__tag">{tag}</span>
-                    ))}
-                  </div>
-                )}
+                <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+                <h2>{post.title}</h2>
+                <p>{post.description}</p>
               </div>
             </a>
           );
         })}
+        {posts.length === 0 && (
+          <p class="blog-listing__empty">No articles published yet. Check back soon.</p>
+        )}
       </div>
     </div>
   </section>

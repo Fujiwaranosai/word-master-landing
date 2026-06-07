@@ -1,28 +1,65 @@
 ---
-import { getCollection, render } from 'astro:content';
 import BlogPostLayout from '../../layouts/BlogPostLayout.astro';
+import CollectionCta from '../../components/CollectionCta.astro';
+import {
+  fetchArticleById,
+  fetchPublishedArticles,
+  type ArticleDetail,
+} from '../../lib/blog-articles';
+import { renderBlogBody } from '../../lib/render-blog-body';
 
+/**
+ * Per-article page. Built statically from DB-sourced articles at build
+ * time — see Vikunja #76 (landing-from-API). Previously sourced from
+ * `getCollection('blog')` over .md files.
+ *
+ * Two-stage fetch: the list endpoint's `toSummary` projection doesn't
+ * include body/sources/collection, so we do a per-id detail fetch for
+ * each row. The per-id endpoint also runs the admin vocab-existence
+ * check (`vocabStatus`) which the landing simply ignores.
+ */
 export async function getStaticPaths() {
-  const posts = await getCollection('blog');
-  return posts.map((post) => ({
-    params: { slug: post.id },
-    props: { post },
+  const summaries = await fetchPublishedArticles();
+  const details = await Promise.all(
+    summaries.map((s) => fetchArticleById(s.id)),
+  );
+  return details.map((article) => ({
+    params: { slug: article.slug },
+    props: { article },
   }));
 }
 
-const { post } = Astro.props;
-const { Content } = await render(post);
+interface Props {
+  article: ArticleDetail;
+}
+
+const { article } = Astro.props;
+const bodyParts = renderBlogBody(article.body);
 ---
 
 <BlogPostLayout
-  title={post.data.title}
-  pubDate={post.data.pubDate}
-  description={post.data.description}
-  author={post.data.author}
-  tags={post.data.tags}
-  collectionSlug={post.data.collectionSlug}
-  collectionWords={post.data.collectionWords}
-  slug={post.id}
+  title={article.title}
+  pubDate={article.publishedAt ? new Date(article.publishedAt) : new Date(article.createdAt)}
+  description={article.description}
+  author={article.author}
+  tags={article.tags}
+  heroImageUrl={article.heroImageUrl}
+  heroImageAlt={article.heroImageAlt}
+  sources={article.sources}
+  slug={article.slug}
+  updatedAt={new Date(article.updatedAt)}
 >
-  <Content />
+  {bodyParts.map((part) => (
+    part.type === 'html'
+      ? <Fragment set:html={part.html} />
+      : article.collection?.slug
+        ? (
+            <CollectionCta
+              collectionSlug={article.collection.slug}
+              words={article.suggestedVocab.map((v) => v.word)}
+              title={`Learn this vocabulary — ${article.collection.name}`}
+            />
+          )
+        : null
+  ))}
 </BlogPostLayout>

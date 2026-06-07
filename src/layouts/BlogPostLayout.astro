@@ -1,7 +1,12 @@
 ---
 import BaseLayout from './BaseLayout.astro';
-import CollectionCta from '../components/CollectionCta.astro';
 import { SITE_NAME, SITE_URL } from '../consts';
+
+interface SourceRef {
+  attribution: string;
+  license?: string;
+  url: string;
+}
 
 interface Props {
   title: string;
@@ -9,13 +14,34 @@ interface Props {
   description: string;
   author: string;
   tags?: string[];
-  collectionSlug?: string;
-  collectionWords?: string[];
-  /** Slug derived from the file name; used to build the article URL. */
+  /** Cover image — rendered at the top of the article AND used as the OG
+   *  image for SERP / social. Falls back to the site-wide og-image when
+   *  the article has no cover (announcement-style posts often skip it). */
+  heroImageUrl?: string | null;
+  heroImageAlt?: string | null;
+  /** Sources block at the bottom of the article — attribution + licence
+   *  for any external material the body draws on (Vikunja #75 originally
+   *  added this as part of the editorial playbook). */
+  sources?: SourceRef[];
+  /** Slug derived from the article row; used to build the article URL. */
   slug?: string;
+  /** When set, the article's updatedAt — emitted as dateModified on the
+   *  JSON-LD so SERPs know how fresh the content is. */
+  updatedAt?: Date;
 }
 
-const { title, pubDate, description, author, tags = [], collectionSlug, collectionWords, slug } = Astro.props;
+const {
+  title,
+  pubDate,
+  description,
+  author,
+  tags = [],
+  heroImageUrl,
+  heroImageAlt,
+  sources = [],
+  slug,
+  updatedAt,
+} = Astro.props;
 
 const formattedDate = pubDate.toLocaleDateString('en-US', {
   year: 'numeric',
@@ -23,11 +49,16 @@ const formattedDate = pubDate.toLocaleDateString('en-US', {
   day: 'numeric',
 });
 
+// Per-article OG image: prefer the article's cover. Falls back to the
+// site-wide og-image.png when the article has no cover (announcements,
+// general posts, etc.). Vikunja #76 SEO checklist.
+const ogImage = heroImageUrl || `${SITE_URL}/og-image.png`;
+
 // Article schema: each blog post emits its own JSON-LD on top of the
 // site-wide WebSite + Organization graphs from BaseLayout. The
 // `mainEntityOfPage` ties the article to its canonical URL.
 const articleUrl = slug ? `${SITE_URL}/blog/${slug}/` : undefined;
-const articleSchema = {
+const articleSchema: Record<string, unknown> = {
   '@type': 'Article',
   '@id': articleUrl ? `${articleUrl}#article` : undefined,
   headline: title,
@@ -37,8 +68,11 @@ const articleSchema = {
   publisher: { '@id': `${SITE_URL}/#organization` },
   mainEntityOfPage: articleUrl,
   keywords: tags.join(', '),
-  image: `${SITE_URL}/og-image.png`,
+  image: ogImage,
 };
+if (updatedAt) {
+  articleSchema.dateModified = updatedAt.toISOString();
+}
 
 // Breadcrumbs let Google show "vocabmine.com > Blog > Article Title"
 // in SERP instead of the raw URL. Only emitted when we have a slug.
@@ -61,6 +95,7 @@ const pageSchema = breadcrumbSchema ? [articleSchema, breadcrumbSchema] : articl
   description={description}
   ogTitle={title}
   ogDescription={description}
+  ogImage={ogImage}
   ogType="article"
   twitterCard="summary_large_image"
   canonicalPath={slug ? `/blog/${slug}/` : undefined}
@@ -71,6 +106,22 @@ const pageSchema = breadcrumbSchema ? [articleSchema, breadcrumbSchema] : articl
     <div class="container">
       <div class="blog-post__content">
         <a href="/blog/" class="blog-post__back">&larr; Back to Blog</a>
+
+        {heroImageUrl && (
+          <figure class="blog-post__hero">
+            <img
+              src={heroImageUrl}
+              alt={heroImageAlt ?? ''}
+              loading="eager"
+              width="1200"
+              height="630"
+            />
+            {heroImageAlt && (
+              <figcaption class="blog-post__hero-caption">{heroImageAlt}</figcaption>
+            )}
+          </figure>
+        )}
+
         <h1>{title}</h1>
         <div class="blog-post__meta">
           <time datetime={pubDate.toISOString()}>{formattedDate}</time>
@@ -86,10 +137,63 @@ const pageSchema = breadcrumbSchema ? [articleSchema, breadcrumbSchema] : articl
         <div class="blog-post__body">
           <slot />
         </div>
-        {collectionSlug && (
-          <CollectionCta collectionSlug={collectionSlug} words={collectionWords} />
+
+        {sources.length > 0 && (
+          <aside class="blog-post__sources">
+            <h2>Sources</h2>
+            <ul>
+              {sources.map((s) => (
+                <li>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer">
+                    {s.attribution || s.url}
+                  </a>
+                  {s.license && <span class="blog-post__source-license"> ({s.license})</span>}
+                </li>
+              ))}
+            </ul>
+          </aside>
         )}
       </div>
     </div>
   </article>
 </BaseLayout>
+
+<style>
+  .blog-post__hero {
+    margin: 0 0 2rem 0;
+  }
+  .blog-post__hero img {
+    border-radius: 8px;
+    height: auto;
+    max-width: 100%;
+    width: 100%;
+  }
+  .blog-post__hero-caption {
+    color: var(--color-text-secondary, #666);
+    display: block;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    text-align: center;
+  }
+  .blog-post__sources {
+    border-top: 1px solid var(--color-border, #e5e5e5);
+    margin-top: 3rem;
+    padding-top: 2rem;
+  }
+  .blog-post__sources h2 {
+    font-size: 1.125rem;
+    margin: 0 0 1rem 0;
+  }
+  .blog-post__sources ul {
+    list-style: none;
+    padding: 0;
+  }
+  .blog-post__sources li {
+    color: var(--color-text-secondary, #666);
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+  }
+  .blog-post__source-license {
+    color: var(--color-text-tertiary, #999);
+  }
+</style>
