@@ -2084,6 +2084,39 @@ body.embed-app .legal {
   color: var(--color-text);
 }
 
+/* GFM tables — admin can insert them via the TipTap Table extension; the
+   marked parser on the landing renders them with `gfm: true`. Vikunja #68. */
+.blog-post__body table {
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  margin-top: 24px;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.blog-post__body th,
+.blog-post__body td {
+  border: 1px solid var(--color-border, #e5e5e5);
+  color: var(--color-text-secondary);
+  padding: 10px 14px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.blog-post__body th {
+  background: var(--color-bg-alt, #f8f9fa);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .blog-post__body table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
 @media (max-width: 480px) {
   .blog-listing__grid {
     grid-template-columns: 1fr;
