@@ -2084,6 +2084,33 @@ body.embed-app .legal {
   color: var(--color-text);
 }
 
+/* Editorial topic chip — sits above the H1, color-coded per topic so a
+   reader can instantly tell vocabulary deep-dives from announcements,
+   etc. Clicking goes to the topic archive page (Vikunja #116 ships
+   those routes). Vikunja #113. */
+.blog-post__topic {
+  align-self: flex-start;
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+  padding: 4px 12px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: filter 0.15s ease;
+}
+.blog-post__topic:hover {
+  filter: brightness(0.92);
+  text-decoration: none;
+}
+.blog-post__topic[data-topic="vocabulary"]      { background: #dbeafe; color: #1e40af; }
+.blog-post__topic[data-topic="writing"]         { background: #ede9fe; color: #5b21b6; }
+.blog-post__topic[data-topic="announcement"]    { background: #d1fae5; color: #065f46; }
+.blog-post__topic[data-topic="learning-science"]{ background: #ffedd5; color: #9a3412; }
+.blog-post__topic[data-topic="story"]           { background: #ffe4e6; color: #9f1239; }
+
 /* GFM tables — admin can insert them via the TipTap Table extension; the
    marked parser on the landing renders them with `gfm: true`. Vikunja #68. */
 .blog-post__body table {

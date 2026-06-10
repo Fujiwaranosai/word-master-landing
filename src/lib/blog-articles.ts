@@ -21,8 +21,28 @@ export interface ArticleSummary {
   slug: string;
   status: "draft" | "published" | "archived";
   title: string;
+  topic: ArticleTopic;
   updatedAt: string;
 }
+
+/** Editorial topic — single value per article. Mirrors the backend
+ *  allowlist in libs/core/src/database/drizzle/schema/articles.ts.
+ *  Vikunja #113. */
+export const ARTICLE_TOPICS = [
+  "vocabulary",
+  "writing",
+  "announcement",
+  "learning-science",
+  "story",
+] as const;
+export type ArticleTopic = (typeof ARTICLE_TOPICS)[number];
+export const ARTICLE_TOPIC_LABELS: Record<ArticleTopic, string> = {
+  announcement: "Announcement",
+  "learning-science": "Learning Science",
+  story: "Story",
+  vocabulary: "Vocabulary",
+  writing: "Writing",
+};
 
 export interface SourceRef {
   attribution: string;

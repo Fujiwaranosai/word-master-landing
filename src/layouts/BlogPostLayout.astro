@@ -1,5 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import { ARTICLE_TOPIC_LABELS, type ArticleTopic } from '../lib/blog-articles';
 import { SITE_NAME, SITE_URL } from '../consts';
 
 interface SourceRef {
@@ -14,6 +15,10 @@ interface Props {
   description: string;
   author: string;
   tags?: string[];
+  /** Editorial topic — rendered as a chip next to the title; the
+   *  per-topic accent color helps readers instantly tell a vocab
+   *  deep-dive from an announcement. Vikunja #113. */
+  topic?: ArticleTopic;
   /** Cover image — rendered at the top of the article AND used as the OG
    *  image for SERP / social. Falls back to the site-wide og-image when
    *  the article has no cover (announcement-style posts often skip it). */
@@ -36,6 +41,7 @@ const {
   description,
   author,
   tags = [],
+  topic,
   heroImageUrl,
   heroImageAlt,
   sources = [],
@@ -122,6 +128,11 @@ const pageSchema = breadcrumbSchema ? [articleSchema, breadcrumbSchema] : articl
           </figure>
         )}
 
+        {topic && (
+          <a href={`/blog/topic/${topic}/`} class="blog-post__topic" data-topic={topic}>
+            {ARTICLE_TOPIC_LABELS[topic]}
+          </a>
+        )}
         <h1>{title}</h1>
         <div class="blog-post__meta">
           <time datetime={pubDate.toISOString()}>{formattedDate}</time>
