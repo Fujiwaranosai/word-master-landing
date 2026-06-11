@@ -1,3 +1,31 @@
+// Per-env defaults inferred from the Jenkins job name. Three landing
+// jobs (`word-master-landing-dev`, `word-master-staging-landing`,
+// `word-master-prod-landing`) share this Jenkinsfile via different
+// branches; without this block, every job would show dev defaults and
+// the operator would have to override on every staging/prod trigger.
+def envFromJobName = (env.JOB_NAME ?: '').contains('prod') ? 'prod' :
+                     (env.JOB_NAME ?: '').contains('staging') ? 'staging' : 'dev'
+
+def defaultAppUrl = envFromJobName == 'prod' ? 'https://app.vocabmine.com' :
+                    envFromJobName == 'staging' ? 'https://staging-fe-5ae3fa73.vocabmine.com' :
+                    'https://word-master-app.dev.nhatbui.link'
+
+// Vikunja #76 — build-time fetch of /blog/articles. Dev uses the LAN
+// shortcut (Jenkins agent is on the LAN); staging + prod use the
+// public HTTPS endpoint.
+def defaultBlogApi = envFromJobName == 'prod' ? 'https://api.vocabmine.com' :
+                     envFromJobName == 'staging' ? 'https://staging-be-5ae3fa73.vocabmine.com' :
+                     'http://192.168.1.9:8020'
+
+// Vikunja #114 — runtime URL the browser hits for /blog/search.
+// Distinct from BLOG_API_BASE_URL only on dev (build host can reach
+// 192.168.1.9 directly, browser must use the LAN DNS name).
+def defaultPublicBlogApi = envFromJobName == 'prod' ? 'https://api.vocabmine.com' :
+                           envFromJobName == 'staging' ? 'https://staging-be-5ae3fa73.vocabmine.com' :
+                           'http://api.word-master.local'
+
+def defaultAllowIndexing = envFromJobName == 'prod'
+
 pipeline {
     agent any
 
@@ -8,7 +36,9 @@ pipeline {
     parameters {
         choice(
             name: 'ENVIRONMENT',
-            choices: ['dev', 'staging', 'prod'],
+            choices: envFromJobName == 'prod' ? ['prod', 'staging', 'dev'] :
+                     envFromJobName == 'staging' ? ['staging', 'prod', 'dev'] :
+                     ['dev', 'staging', 'prod'],
             description: 'Environment to deploy to'
         )
         string(
@@ -22,7 +52,7 @@ pipeline {
         // (job config persists them).
         string(
             name: 'APP_URL',
-            defaultValue: 'https://word-master-app.dev.nhatbui.link',
+            defaultValue: defaultAppUrl,
             description: 'Vocab Mine app base URL — pricing buttons + blog deep-links build off this. No trailing slash.'
         )
         string(
@@ -37,8 +67,8 @@ pipeline {
         )
         booleanParam(
             name: 'ALLOW_INDEXING',
-            defaultValue: false,
-            description: 'Allow search engine crawling (true for prod, false for dev)'
+            defaultValue: defaultAllowIndexing,
+            description: 'Allow search engine crawling (default: true for prod, false for dev/staging)'
         )
         // Blog data plane — Vikunja #76. Landing sources blog articles
         // from the backend's PUBLIC blog API at build time (not local .md
@@ -47,8 +77,17 @@ pipeline {
         // base URL of the target env's backend — no auth token.
         string(
             name: 'BLOG_API_BASE_URL',
-            defaultValue: 'http://192.168.1.9:8020',
-            description: 'Backend API base URL used to fetch published articles at build time. Dev: Dell (http://192.168.1.9:8020). Staging: https://staging-be-5ae3fa73.vocabmine.com.'
+            defaultValue: defaultBlogApi,
+            description: 'Backend API base URL used to fetch published articles at build time. Defaults per env (dev: Dell LAN, staging/prod: public HTTPS).'
+        )
+        // Vikunja #114 — runtime URL the browser hits for /blog/search.
+        // Distinct from BLOG_API_BASE_URL because the build host can reach
+        // the backend via a LAN shortcut (e.g. 192.168.1.9:8020) but the
+        // browser must use a publicly resolvable hostname.
+        string(
+            name: 'PUBLIC_BLOG_API_BASE_URL',
+            defaultValue: defaultPublicBlogApi,
+            description: 'Backend API base URL the BROWSER will call at runtime (live blog search). Defaults per env (dev: http://api.word-master.local, staging/prod: public HTTPS).'
         )
     }
 
