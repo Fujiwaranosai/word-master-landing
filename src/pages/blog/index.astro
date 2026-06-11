@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlogSearch from '../../components/BlogSearch.astro';
 import { SITE_NAME } from '../../consts';
 import { fetchPublishedArticles } from '../../lib/blog-articles';
 
@@ -24,6 +25,9 @@ const posts = await fetchPublishedArticles();
         <h1>Blog</h1>
         <p>Tips, strategies, and updates to help you master vocabulary like never before.</p>
       </div>
+
+      <BlogSearch />
+
       <div class="blog-listing__grid">
         {posts.map((post) => {
           const pubDate = post.publishedAt ? new Date(post.publishedAt) : new Date(post.createdAt);

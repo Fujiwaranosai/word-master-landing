@@ -50,6 +50,15 @@ pipeline {
             defaultValue: 'http://192.168.1.9:8020',
             description: 'Backend API base URL used to fetch published articles at build time. Dev: Dell (http://192.168.1.9:8020). Staging: https://staging-be-5ae3fa73.vocabmine.com.'
         )
+        // Vikunja #114 — runtime URL the browser hits for /blog/search.
+        // Distinct from BLOG_API_BASE_URL because the build host can reach
+        // the backend via a LAN shortcut (e.g. 192.168.1.9:8020) but the
+        // browser must use a publicly resolvable hostname.
+        string(
+            name: 'PUBLIC_BLOG_API_BASE_URL',
+            defaultValue: 'http://api.word-master.local',
+            description: 'Backend API base URL the BROWSER will call at runtime (live blog search). Dev: http://api.word-master.local. Staging: https://staging-be-5ae3fa73.vocabmine.com. Prod: https://api.vocabmine.com.'
+        )
     }
 
     environment {
@@ -115,6 +124,9 @@ pipeline {
                         fi
                         if [ -n "${params.APP_URL}" ]; then
                             echo "PUBLIC_APP_URL=${params.APP_URL}" >> .env
+                        fi
+                        if [ -n "${params.PUBLIC_BLOG_API_BASE_URL}" ]; then
+                            echo "PUBLIC_BLOG_API_BASE_URL=${params.PUBLIC_BLOG_API_BASE_URL}" >> .env
                         fi
                         echo ".env file created"
                         cat .env
