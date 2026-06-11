@@ -110,41 +110,52 @@ const pageSchema = breadcrumbSchema ? [articleSchema, breadcrumbSchema] : articl
 >
   <article class="blog-post">
     <div class="container">
+      {/* Breadcrumb sits ABOVE the article block so it reads as
+          wayfinding, not metadata. Vikunja #117. */}
+      <nav class="blog-post__breadcrumb" aria-label="Breadcrumb">
+        <a href="/blog/">&larr; Blog</a>
+      </nav>
+
       <div class="blog-post__content">
-        <a href="/blog/" class="blog-post__back">&larr; Back to Blog</a>
+        {/* Header block: topic eyebrow → H1 → meta. Hero (if present)
+            sits between eyebrow and H1 like an editorial cover; the
+            eyebrow stays visible above it. */}
+        <header class="blog-post__header">
+          {topic && (
+            <a href={`/blog/topic/${topic}/`} class="blog-post__topic" data-topic={topic}>
+              {ARTICLE_TOPIC_LABELS[topic]}
+            </a>
+          )}
 
-        {heroImageUrl && (
-          <figure class="blog-post__hero">
-            <img
-              src={heroImageUrl}
-              alt={heroImageAlt ?? ''}
-              loading="eager"
-              width="1200"
-              height="630"
-            />
-            {heroImageAlt && (
-              <figcaption class="blog-post__hero-caption">{heroImageAlt}</figcaption>
-            )}
-          </figure>
-        )}
+          {heroImageUrl && (
+            <figure class="blog-post__hero">
+              <img
+                src={heroImageUrl}
+                alt={heroImageAlt ?? ''}
+                loading="eager"
+                width="1200"
+                height="630"
+              />
+              {heroImageAlt && (
+                <figcaption class="blog-post__hero-caption">{heroImageAlt}</figcaption>
+              )}
+            </figure>
+          )}
 
-        {topic && (
-          <a href={`/blog/topic/${topic}/`} class="blog-post__topic" data-topic={topic}>
-            {ARTICLE_TOPIC_LABELS[topic]}
-          </a>
-        )}
-        <h1>{title}</h1>
-        <div class="blog-post__meta">
-          <time datetime={pubDate.toISOString()}>{formattedDate}</time>
-          <span class="blog-post__author">by {author}</span>
-        </div>
-        {tags.length > 0 && (
-          <div class="blog-post__tags">
-            {tags.map((tag) => (
-              <span class="blog-post__tag">{tag}</span>
-            ))}
+          <h1>{title}</h1>
+          <div class="blog-post__meta">
+            <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+            <span class="blog-post__meta-sep" aria-hidden="true">·</span>
+            <span class="blog-post__author">by {author}</span>
           </div>
-        )}
+          {tags.length > 0 && (
+            <div class="blog-post__tags">
+              {tags.map((tag) => (
+                <span class="blog-post__tag">{tag}</span>
+              ))}
+            </div>
+          )}
+        </header>
         <div class="blog-post__body">
           <slot />
         </div>

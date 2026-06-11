@@ -1996,37 +1996,60 @@ body.embed-app .legal {
   margin: 0 auto;
 }
 
-.blog-post__back {
-  display: inline-block;
-  font-size: 0.875rem;
-  font-weight: 500;
+/* Breadcrumb — small, secondary; sits above the article block so it
+   reads as wayfinding (not metadata) and clears the topic chip from
+   the title area. Vikunja #117. */
+.blog-post__breadcrumb {
+  max-width: 760px;
+  margin: 0 auto 24px;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+.blog-post__breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+.blog-post__breadcrumb a:hover {
   color: var(--color-primary);
-  margin-bottom: 24px;
+  text-decoration: underline;
 }
 
-.blog-post__back:hover {
-  color: var(--color-primary-dark);
+/* Header block — eyebrow (topic) → optional hero → H1 → meta → tags.
+   Defines the vertical rhythm of the title area independent of the
+   back-link, which now lives outside. */
+.blog-post__header {
+  margin-bottom: 32px;
 }
 
 .blog-post__content h1 {
   margin-bottom: 12px;
+  margin-top: 0;
 }
 
 .blog-post__meta {
   color: var(--color-text-secondary);
   font-size: 0.9375rem;
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.blog-post__meta-sep {
+  color: var(--color-text-tertiary, #cbd5e1);
 }
 
 .blog-post__author {
-  margin-left: 8px;
+  margin-left: 0;
 }
 
 .blog-post__tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 32px;
+  margin-bottom: 0;
 }
 
 .blog-post__tag {
@@ -2084,19 +2107,20 @@ body.embed-app .legal {
   color: var(--color-text);
 }
 
-/* Editorial topic chip — sits above the H1, color-coded per topic so a
-   reader can instantly tell vocabulary deep-dives from announcements,
-   etc. Clicking goes to the topic archive page (Vikunja #116 ships
-   those routes). Vikunja #113. */
+/* Editorial topic chip — pre-title eyebrow above the H1. Color-coded
+   per topic so a reader can instantly tell vocabulary deep-dives from
+   announcements, etc. Clicking goes to the topic archive page
+   (Vikunja #116 ships those routes). Vikunja #113, #117. */
 .blog-post__topic {
-  align-self: flex-start;
   border-radius: 999px;
   display: inline-block;
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  margin-bottom: 16px;
-  padding: 4px 12px;
+  letter-spacing: 0.08em;
+  /* Generous bottom margin establishes vertical rhythm between the
+     eyebrow and whatever follows (hero figure or H1). */
+  margin: 0 0 20px;
+  padding: 5px 14px;
   text-decoration: none;
   text-transform: uppercase;
   transition: filter 0.15s ease;
@@ -2104,6 +2128,14 @@ body.embed-app .legal {
 .blog-post__topic:hover {
   filter: brightness(0.92);
   text-decoration: none;
+}
+/* Mobile: a touch smaller so the eyebrow doesn't compete with H1 size. */
+@media (max-width: 480px) {
+  .blog-post__topic {
+    font-size: 0.7rem;
+    margin-bottom: 16px;
+    padding: 4px 12px;
+  }
 }
 .blog-post__topic[data-topic="vocabulary"]      { background: #dbeafe; color: #1e40af; }
 .blog-post__topic[data-topic="writing"]         { background: #ede9fe; color: #5b21b6; }
