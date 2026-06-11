@@ -1,0 +1,130 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { SITE_NAME } from '../../../consts';
+import {
+  ARTICLE_TOPIC_LABELS,
+  ARTICLE_TOPICS,
+  fetchPublishedArticles,
+  type ArticleSummary,
+  type ArticleTopic,
+} from '../../../lib/blog-articles';
+
+/**
+ * Per-topic blog archive (Vikunja #116 Part A). One static page per
+ * topic — `/blog/topic/vocabulary/`, `/blog/topic/announcement/`, etc.
+ * Each is its own indexable URL with topic-specific meta, so SEO can
+ * surface "vocabmine.com → Vocabulary" as a sub-section instead of
+ * everything funneling through the single /blog/ index.
+ *
+ * Empty topics still emit a page (rather than 404) so that links to,
+ * say, /blog/topic/learning-science/ from posts that mention it
+ * resolve gracefully when no posts in that topic exist yet.
+ */
+export async function getStaticPaths() {
+  const all = await fetchPublishedArticles();
+  return ARTICLE_TOPICS.map((topic) => ({
+    params: { topic },
+    props: {
+      topic,
+      posts: all.filter((p) => p.topic === topic),
+    },
+  }));
+}
+
+interface Props {
+  posts: ArticleSummary[];
+  topic: ArticleTopic;
+}
+
+const { posts, topic } = Astro.props;
+const label = ARTICLE_TOPIC_LABELS[topic];
+
+const TOPIC_INTROS: Record<ArticleTopic, string> = {
+  announcement: `Product updates and release notes from the ${SITE_NAME} team.`,
+  'learning-science': `How effective vocabulary learning actually works — research-backed methods and study tools.`,
+  story: `Reader stories, case studies, and lessons from people learning vocabulary the right way.`,
+  vocabulary: `Word and phrase deep dives — meaning, nuance, and how to use them.`,
+  writing: `Grammar, style, and craft for writers who want their sentences to land.`,
+};
+
+const intro = TOPIC_INTROS[topic];
+---
+
+<BaseLayout
+  title={`${label} — ${SITE_NAME} Blog`}
+  description={intro}
+  canonicalPath={`/blog/topic/${topic}/`}
+  currentPage="blog"
+>
+  <section class="blog-listing">
+    <div class="container">
+      <nav class="blog-listing__breadcrumb" aria-label="Breadcrumb">
+        <a href="/blog/">&larr; All posts</a>
+      </nav>
+
+      <div class="blog-listing__header">
+        <span class="blog-listing__topic-eyebrow" data-topic={topic}>{label}</span>
+        <h1>{label}</h1>
+        <p>{intro}</p>
+      </div>
+
+      <div class="blog-listing__grid">
+        {posts.map((post) => {
+          const pubDate = post.publishedAt ? new Date(post.publishedAt) : new Date(post.createdAt);
+          const formattedDate = pubDate.toLocaleDateString('en-US', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          });
+          return (
+            <a href={`/blog/${post.slug}/`} class="blog-card fade-in">
+              <div class="blog-card__content">
+                <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+                <h2>{post.title}</h2>
+                <p>{post.description}</p>
+              </div>
+            </a>
+          );
+        })}
+        {posts.length === 0 && (
+          <p class="blog-listing__empty">No posts in this topic yet. Check back soon.</p>
+        )}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .blog-listing__breadcrumb {
+    color: var(--color-text-secondary);
+    font-size: 0.8125rem;
+    margin: 0 auto 16px;
+    max-width: 1100px;
+  }
+  .blog-listing__breadcrumb a {
+    color: inherit;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+  }
+  .blog-listing__breadcrumb a:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+
+  .blog-listing__topic-eyebrow {
+    background: #dbeafe;
+    border-radius: 999px;
+    color: #1e40af;
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+    padding: 4px 12px;
+    text-transform: uppercase;
+  }
+  .blog-listing__topic-eyebrow[data-topic="writing"]          { background: #ede9fe; color: #5b21b6; }
+  .blog-listing__topic-eyebrow[data-topic="announcement"]     { background: #d1fae5; color: #065f46; }
+  .blog-listing__topic-eyebrow[data-topic="learning-science"] { background: #ffedd5; color: #9a3412; }
+  .blog-listing__topic-eyebrow[data-topic="story"]            { background: #ffe4e6; color: #9f1239; }
+</style>
