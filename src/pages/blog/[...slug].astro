@@ -37,7 +37,14 @@ interface Props {
 }
 
 const { article } = Astro.props;
-const bodyParts = renderBlogBody(article.body);
+// Auto-place a Collection CTA at the body midpoint when the article has
+// a bound collection but the body doesn't already carry the inline
+// marker. This covers legacy posts (approved before the inline CTA
+// feature shipped) and posts where the admin forgot to insert the
+// marker. Vikunja #118.
+const bodyParts = renderBlogBody(article.body, {
+  autoInsertCta: !!article.collection?.slug,
+});
 ---
 
 <BlogPostLayout

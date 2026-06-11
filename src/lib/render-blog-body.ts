@@ -235,6 +235,50 @@ function parseStartSeconds(u: URL): number {
   return (parseInt(h ?? "0", 10) * 3600) + (parseInt(mi ?? "0", 10) * 60) + parseInt(s ?? "0", 10);
 }
 
+/** Inject a synthetic collection-cta token at the midpoint of the body
+ *  if the admin didn't insert one explicitly. Used by autoInsertCta —
+ *  picks the natural break BETWEEN text tokens whose cumulative text
+ *  length crosses 50% of the article. Vikunja #118.
+ *
+ *  Why between tokens, not inside one: each text token is a contiguous
+ *  markdown block (paragraph + headings + lists between markers). Cutting
+ *  inside one would orphan a heading or split a list — bad reading flow.
+ *  The midpoint-after-token rule keeps every existing block intact. */
+function injectCtaAtMidpoint(tokens: Token[]): Token[] {
+  if (tokens.some((t) => t.kind === "cta")) return tokens;
+
+  const totalLen = tokens.reduce(
+    (sum, t) => sum + (t.kind === "text" ? t.content.length : 0),
+    0,
+  );
+  if (totalLen === 0) return tokens;
+
+  const halfway = totalLen / 2;
+  let acc = 0;
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i].kind === "text") {
+      acc += (tokens[i] as { content: string }).content.length;
+      if (acc >= halfway) {
+        return [
+          ...tokens.slice(0, i + 1),
+          { kind: "cta" } as Token,
+          ...tokens.slice(i + 1),
+        ];
+      }
+    }
+  }
+  // Body has block tokens (callouts, videos) but no text — append at end.
+  return [...tokens, { kind: "cta" } as Token];
+}
+
+export interface RenderOptions {
+  /** When true AND the body has no explicit `<!-- collection-cta -->`
+   *  marker, inject one at the body's midpoint so the caller can render
+   *  the bound collection without admin authoring (legacy posts; admins
+   *  who forgot the marker). Vikunja #118. */
+  autoInsertCta?: boolean;
+}
+
 /**
  * Tokenize the body and render each segment. Text tokens go through
  * `marked` (markdown → HTML). Block tokens become typed BodyParts that
@@ -243,10 +287,18 @@ function parseStartSeconds(u: URL): number {
  * Returns an empty array for null/undefined body to keep the caller's
  * mapping logic simple even when the DB layer evolves.
  */
-export function renderBlogBody(body: string | null | undefined): BodyPart[] {
+export function renderBlogBody(
+  body: string | null | undefined,
+  options: RenderOptions = {},
+): BodyPart[] {
   if (!body) return [];
 
-  return tokenize(body)
+  let tokens = tokenize(body);
+  if (options.autoInsertCta) {
+    tokens = injectCtaAtMidpoint(tokens);
+  }
+
+  return tokens
     .map((t): BodyPart | null => {
       switch (t.kind) {
         case "text":
