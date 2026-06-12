@@ -1,31 +1,3 @@
-// Per-env defaults inferred from the Jenkins job name. Three landing
-// jobs (`word-master-landing-dev`, `word-master-staging-landing`,
-// `word-master-prod-landing`) share this Jenkinsfile via different
-// branches; without this block, every job would show dev defaults and
-// the operator would have to override on every staging/prod trigger.
-def envFromJobName = (env.JOB_NAME ?: '').contains('prod') ? 'prod' :
-                     (env.JOB_NAME ?: '').contains('staging') ? 'staging' : 'dev'
-
-def defaultAppUrl = envFromJobName == 'prod' ? 'https://app.vocabmine.com' :
-                    envFromJobName == 'staging' ? 'https://staging-fe-5ae3fa73.vocabmine.com' :
-                    'https://word-master-app.dev.nhatbui.link'
-
-// Vikunja #76 — build-time fetch of /blog/articles. Dev uses the LAN
-// shortcut (Jenkins agent is on the LAN); staging + prod use the
-// public HTTPS endpoint.
-def defaultBlogApi = envFromJobName == 'prod' ? 'https://api.vocabmine.com' :
-                     envFromJobName == 'staging' ? 'https://staging-be-5ae3fa73.vocabmine.com' :
-                     'http://192.168.1.9:8020'
-
-// Vikunja #114 — runtime URL the browser hits for /blog/search.
-// Distinct from BLOG_API_BASE_URL only on dev (build host can reach
-// 192.168.1.9 directly, browser must use the LAN DNS name).
-def defaultPublicBlogApi = envFromJobName == 'prod' ? 'https://api.vocabmine.com' :
-                           envFromJobName == 'staging' ? 'https://staging-be-5ae3fa73.vocabmine.com' :
-                           'http://api.word-master.local'
-
-def defaultAllowIndexing = envFromJobName == 'prod'
-
 pipeline {
     agent any
 
@@ -33,63 +5,13 @@ pipeline {
         nodejs 'node-22'
     }
 
-    parameters {
-        choice(
-            name: 'ENVIRONMENT',
-            choices: envFromJobName == 'prod' ? ['prod', 'staging', 'dev'] :
-                     envFromJobName == 'staging' ? ['staging', 'prod', 'dev'] :
-                     ['dev', 'staging', 'prod'],
-            description: 'Environment to deploy to'
-        )
-        string(
-            name: 'PROJECT_NAME',
-            defaultValue: 'word-master-landing',
-            description: 'Project name (must match CDK configuration)'
-        )
-        // Build-time env vars. Previously fetched from SSM Parameter Store;
-        // now sourced directly from Jenkins so we don't depend on AWS
-        // CodePipeline / SSM round-trips. Set the actual values per-job
-        // (job config persists them).
-        string(
-            name: 'APP_URL',
-            defaultValue: defaultAppUrl,
-            description: 'Vocab Mine app base URL — pricing buttons + blog deep-links build off this. No trailing slash.'
-        )
-        string(
-            name: 'SUPPORT_EMAIL',
-            defaultValue: '',
-            description: 'Support email shown in footer / contact links (optional)'
-        )
-        string(
-            name: 'GA_MEASUREMENT_ID',
-            defaultValue: '',
-            description: 'Google Analytics 4 Measurement ID (leave blank to disable)'
-        )
-        booleanParam(
-            name: 'ALLOW_INDEXING',
-            defaultValue: defaultAllowIndexing,
-            description: 'Allow search engine crawling (default: true for prod, false for dev/staging)'
-        )
-        // Blog data plane — Vikunja #76. Landing sources blog articles
-        // from the backend's PUBLIC blog API at build time (not local .md
-        // files). The public endpoints (GET /blog/articles[/:id]) only
-        // ever expose published articles, so the build needs just the
-        // base URL of the target env's backend — no auth token.
-        string(
-            name: 'BLOG_API_BASE_URL',
-            defaultValue: defaultBlogApi,
-            description: 'Backend API base URL used to fetch published articles at build time. Defaults per env (dev: Dell LAN, staging/prod: public HTTPS).'
-        )
-        // Vikunja #114 — runtime URL the browser hits for /blog/search.
-        // Distinct from BLOG_API_BASE_URL because the build host can reach
-        // the backend via a LAN shortcut (e.g. 192.168.1.9:8020) but the
-        // browser must use a publicly resolvable hostname.
-        string(
-            name: 'PUBLIC_BLOG_API_BASE_URL',
-            defaultValue: defaultPublicBlogApi,
-            description: 'Backend API base URL the BROWSER will call at runtime (live blog search). Defaults per env (dev: http://api.word-master.local, staging/prod: public HTTPS).'
-        )
-    }
+    // Parameters are defined per-job in Jenkins XML config using the
+    // persistent-parameter plugin. Each job (dev / staging / prod)
+    // carries its own env-correct defaults and remembers the last-used
+    // value across UI and API/MCP triggers. Mirrors the backend
+    // Jenkinsfile pattern. DO NOT add a `parameters { … }` block here —
+    // Jenkins overwrites the XML's persistent definitions with plain
+    // variants on every build that declares them in the Jenkinsfile.
 
     environment {
         // AWS Region - update this to match your AWS setup
