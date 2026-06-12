@@ -155,6 +155,9 @@ pipeline {
                         if [ -n "${params.APP_URL}" ]; then
                             echo "PUBLIC_APP_URL=${params.APP_URL}" >> .env
                         fi
+                        if [ -n "${params.PUBLIC_BLOG_API_BASE_URL}" ]; then
+                            echo "PUBLIC_BLOG_API_BASE_URL=${params.PUBLIC_BLOG_API_BASE_URL}" >> .env
+                        fi
                         echo ".env file created"
                         cat .env
                     """

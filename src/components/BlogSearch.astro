@@ -1,0 +1,323 @@
+---
+/**
+ * Vanilla-TS search island for the /blog/ index. Renders a debounced
+ * input that calls `${BLOG_API_BASE_URL}/blog/search?q=…` and shows
+ * highlighted result cards inline. When the input is empty, hides
+ * itself and lets the static card list below render. Vikunja #114.
+ *
+ * Chose vanilla over Preact/React because the landing has no framework
+ * integrations today and search is a single, self-contained widget —
+ * not worth bringing the framework's bundle along.
+ */
+// Runtime API URL — the browser will hit this from the user's machine,
+// so it must be a publicly resolvable hostname (not the build-host
+// shortcut like `http://192.168.1.9:8020`). PUBLIC_* env vars get
+// inlined into the client bundle by Astro/Vite. Falls back to the
+// build-time URL for dev convenience when running `astro dev` locally.
+const apiBaseUrl =
+  import.meta.env.PUBLIC_BLOG_API_BASE_URL ??
+  process.env.BLOG_API_BASE_URL ??
+  'http://api.word-master.local';
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? '';
+---
+
+<div class="blog-search">
+  <label class="blog-search__label" for="blog-search-input">
+    <span class="blog-search__icon" aria-hidden="true">⌕</span>
+    <input
+      id="blog-search-input"
+      class="blog-search__input"
+      type="search"
+      placeholder="Search the blog…"
+      autocomplete="off"
+      data-api-base-url={apiBaseUrl}
+      data-app-url={appUrl}
+    />
+  </label>
+  <div
+    class="blog-search__results"
+    role="region"
+    aria-live="polite"
+    aria-label="Search results"
+    hidden
+  >
+    <ul class="blog-search__list" data-state="empty"></ul>
+    <p class="blog-search__status" aria-hidden="true"></p>
+  </div>
+</div>
+
+<script>
+  // ---------- Types ----------
+  interface SearchHit {
+    articleId: string;
+    author: string;
+    description: string;
+    heroImageUrl: string | null;
+    highlightBody: string | null;
+    highlightTitle: string | null;
+    publishedAt: number;
+    slug: string;
+    tags: string[];
+    title: string;
+    topic: string;
+  }
+  interface SearchResponse {
+    data: {
+      hits: SearchHit[];
+      status?: 'unavailable';
+      total: number;
+    };
+    success: boolean;
+  }
+
+  const input = document.getElementById('blog-search-input') as HTMLInputElement | null;
+  const resultsBox = document.querySelector('.blog-search__results') as HTMLElement | null;
+  const list = resultsBox?.querySelector<HTMLUListElement>('.blog-search__list');
+  const statusEl = resultsBox?.querySelector<HTMLParagraphElement>('.blog-search__status');
+  const staticGrid = document.querySelector<HTMLElement>('.blog-listing__grid');
+
+  if (input && resultsBox && list && statusEl) {
+    const apiBaseUrl = input.dataset.apiBaseUrl ?? '';
+    let currentRequest = 0; // monotonically increasing — drops stale responses
+
+    /** Escape user-controlled strings before they hit innerHTML. Highlighted
+     *  snippets from Typesense already contain `<mark>` tags we WANT to
+     *  keep — so for those we sanitise differently (see escapeAllowMark). */
+    function escapeHtml(s: string): string {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+    /** Escape everything EXCEPT the `<mark>…</mark>` tags Typesense emits.
+     *  Splits on the mark boundaries, escapes the segments, then rejoins
+     *  with the literal tags. Avoids using innerHTML on raw server data. */
+    function escapeAllowMark(s: string): string {
+      // Split on either opening or closing mark tag (case-insensitive).
+      const parts = s.split(/(<\/?mark>)/gi);
+      return parts
+        .map((p) => (p.match(/<\/?mark>/i) ? p.toLowerCase() : escapeHtml(p)))
+        .join('');
+    }
+
+    function formatDate(unixSec: number): string {
+      const d = new Date(unixSec * 1000);
+      return d.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+
+    function renderHits(hits: SearchHit[]): string {
+      return hits
+        .map((h) => {
+          const titleHtml = h.highlightTitle ? escapeAllowMark(h.highlightTitle) : escapeHtml(h.title);
+          const bodyHtml = h.highlightBody
+            ? escapeAllowMark(h.highlightBody)
+            : escapeHtml(h.description);
+          const topicLabel = h.topic
+            .replace(/-/g, ' ')
+            .replace(/\b\w/g, (c) => c.toUpperCase());
+          return `
+            <li class="blog-search__hit">
+              <a href="/blog/${escapeHtml(h.slug)}/" class="blog-search__hit-link">
+                <span class="blog-search__hit-topic" data-topic="${escapeHtml(h.topic)}">${escapeHtml(topicLabel)}</span>
+                <h3 class="blog-search__hit-title">${titleHtml}</h3>
+                <p class="blog-search__hit-snippet">${bodyHtml}</p>
+                <time class="blog-search__hit-date" datetime="${new Date(h.publishedAt * 1000).toISOString()}">${formatDate(h.publishedAt)}</time>
+              </a>
+            </li>
+          `;
+        })
+        .join('');
+    }
+
+    async function runSearch(q: string): Promise<void> {
+      const requestId = ++currentRequest;
+      try {
+        const url = `${apiBaseUrl}/blog/search?q=${encodeURIComponent(q)}&perPage=10`;
+        const res = await fetch(url);
+        if (requestId !== currentRequest) return; // stale
+        if (!res.ok) {
+          statusEl!.textContent = 'Search temporarily unavailable.';
+          list!.innerHTML = '';
+          list!.dataset.state = 'error';
+          return;
+        }
+        const body = (await res.json()) as SearchResponse;
+        if (requestId !== currentRequest) return;
+        if (body.data.status === 'unavailable') {
+          statusEl!.textContent = 'Search temporarily unavailable.';
+          list!.innerHTML = '';
+          list!.dataset.state = 'error';
+          return;
+        }
+        if (body.data.total === 0) {
+          statusEl!.textContent = `No matches for "${q}".`;
+          list!.innerHTML = '';
+          list!.dataset.state = 'empty';
+          return;
+        }
+        statusEl!.textContent = `${body.data.total} result${body.data.total === 1 ? '' : 's'} for "${q}"`;
+        list!.innerHTML = renderHits(body.data.hits);
+        list!.dataset.state = 'ok';
+      } catch (err) {
+        if (requestId !== currentRequest) return;
+        statusEl!.textContent = 'Search temporarily unavailable.';
+        list!.innerHTML = '';
+        list!.dataset.state = 'error';
+      }
+    }
+
+    function showSearchMode(): void {
+      resultsBox!.hidden = false;
+      if (staticGrid) staticGrid.hidden = true;
+    }
+    function showListMode(): void {
+      resultsBox!.hidden = true;
+      list!.innerHTML = '';
+      statusEl!.textContent = '';
+      list!.dataset.state = 'empty';
+      if (staticGrid) staticGrid.hidden = false;
+    }
+
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    input.addEventListener('input', () => {
+      const q = input.value.trim();
+      if (debounceTimer) clearTimeout(debounceTimer);
+      if (q.length === 0) {
+        showListMode();
+        return;
+      }
+      showSearchMode();
+      statusEl!.textContent = 'Searching…';
+      debounceTimer = setTimeout(() => {
+        runSearch(q);
+      }, 250);
+    });
+
+    // Initialise URL state — ?q=foo on direct hit pre-populates and searches.
+    const params = new URLSearchParams(window.location.search);
+    const initialQ = params.get('q')?.trim();
+    if (initialQ) {
+      input.value = initialQ;
+      showSearchMode();
+      runSearch(initialQ);
+    }
+  }
+</script>
+
+<style>
+  .blog-search {
+    margin: 24px auto 32px;
+    max-width: 640px;
+  }
+
+  .blog-search__label {
+    align-items: center;
+    background: var(--color-bg-alt, #f5f7fb);
+    border: 1px solid var(--color-border, #d1d5db);
+    border-radius: 999px;
+    display: flex;
+    gap: 8px;
+    padding: 10px 18px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .blog-search__label:focus-within {
+    border-color: var(--color-primary, #2563eb);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  }
+  .blog-search__icon {
+    color: var(--color-text-secondary);
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+  .blog-search__input {
+    background: transparent;
+    border: 0;
+    color: var(--color-text);
+    flex: 1;
+    font-size: 1rem;
+    outline: none;
+    padding: 4px 0;
+  }
+  .blog-search__input::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.7;
+  }
+
+  .blog-search__status {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    margin: 0 0 12px 4px;
+  }
+  .blog-search__list {
+    display: grid;
+    gap: 16px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .blog-search__hit {
+    background: var(--color-bg, #fff);
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: 8px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  }
+  .blog-search__hit:hover {
+    border-color: var(--color-primary, #2563eb);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);
+    transform: translateY(-1px);
+  }
+  .blog-search__hit-link {
+    color: inherit;
+    display: block;
+    padding: 18px 20px;
+    text-decoration: none;
+  }
+  .blog-search__hit-topic {
+    background: #dbeafe;
+    border-radius: 999px;
+    color: #1e40af;
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    padding: 3px 10px;
+    text-transform: uppercase;
+  }
+  .blog-search__hit-topic[data-topic="writing"]          { background: #ede9fe; color: #5b21b6; }
+  .blog-search__hit-topic[data-topic="announcement"]     { background: #d1fae5; color: #065f46; }
+  .blog-search__hit-topic[data-topic="learning-science"] { background: #ffedd5; color: #9a3412; }
+  .blog-search__hit-topic[data-topic="story"]            { background: #ffe4e6; color: #9f1239; }
+  .blog-search__hit-title {
+    color: var(--color-text);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+  }
+  .blog-search__hit-snippet {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0 0 8px 0;
+  }
+  .blog-search__hit-snippet :global(mark) {
+    background: #fef3c7;
+    border-radius: 2px;
+    color: inherit;
+    padding: 0 2px;
+  }
+  .blog-search__hit-title :global(mark) {
+    background: #fef3c7;
+    border-radius: 2px;
+    color: inherit;
+    padding: 0 2px;
+  }
+  .blog-search__hit-date {
+    color: var(--color-text-secondary);
+    display: block;
+    font-size: 0.8rem;
+  }
+</style>

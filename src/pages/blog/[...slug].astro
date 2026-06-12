@@ -1,6 +1,9 @@
 ---
 import BlogPostLayout from '../../layouts/BlogPostLayout.astro';
+import Callout from '../../components/Callout.astro';
 import CollectionCta from '../../components/CollectionCta.astro';
+import Pullquote from '../../components/Pullquote.astro';
+import VideoEmbed from '../../components/VideoEmbed.astro';
 import {
   fetchArticleById,
   fetchPublishedArticles,
@@ -34,7 +37,14 @@ interface Props {
 }
 
 const { article } = Astro.props;
-const bodyParts = renderBlogBody(article.body);
+// Auto-place a Collection CTA at the body midpoint when the article has
+// a bound collection but the body doesn't already carry the inline
+// marker. This covers legacy posts (approved before the inline CTA
+// feature shipped) and posts where the admin forgot to insert the
+// marker. Vikunja #118.
+const bodyParts = renderBlogBody(article.body, {
+  autoInsertCta: !!article.collection?.slug,
+});
 ---
 
 <BlogPostLayout
@@ -43,23 +53,36 @@ const bodyParts = renderBlogBody(article.body);
   description={article.description}
   author={article.author}
   tags={article.tags}
+  topic={article.topic}
   heroImageUrl={article.heroImageUrl}
   heroImageAlt={article.heroImageAlt}
   sources={article.sources}
   slug={article.slug}
   updatedAt={new Date(article.updatedAt)}
 >
-  {bodyParts.map((part) => (
-    part.type === 'html'
-      ? <Fragment set:html={part.html} />
-      : article.collection?.slug
-        ? (
-            <CollectionCta
-              collectionSlug={article.collection.slug}
-              words={article.suggestedVocab.map((v) => v.word)}
-              title={`Learn this vocabulary — ${article.collection.name}`}
-            />
-          )
-        : null
-  ))}
+  {bodyParts.map((part) => {
+    if (part.type === 'html') {
+      return <Fragment set:html={part.html} />;
+    }
+    if (part.type === 'callout') {
+      return <Callout html={part.html} variant={part.variant} />;
+    }
+    if (part.type === 'pullquote') {
+      return <Pullquote html={part.html} />;
+    }
+    if (part.type === 'video') {
+      return <VideoEmbed embedUrl={part.embedUrl} />;
+    }
+    // collection-cta — only renders if a collection is bound
+    if (part.type === 'collection-cta' && article.collection?.slug) {
+      return (
+        <CollectionCta
+          collectionSlug={article.collection.slug}
+          words={article.suggestedVocab.map((v) => v.word)}
+          title={`Learn this vocabulary — ${article.collection.name}`}
+        />
+      );
+    }
+    return null;
+  })}
 </BlogPostLayout>

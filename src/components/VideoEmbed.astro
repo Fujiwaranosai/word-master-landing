@@ -1,0 +1,59 @@
+---
+/**
+ * Privacy-friendly video embed. The renderer (render-blog-body.ts) has
+ * already validated the host against an allowlist and canonicalised the
+ * URL to youtube-nocookie or player.vimeo form; we only emit the
+ * iframe here. Vikunja #68.
+ *
+ * `loading="lazy"` defers fetch until the iframe scrolls into view —
+ * matters because YouTube/Vimeo embed bundles weigh hundreds of KB
+ * even before the user plays.
+ *
+ * `sandbox` minimises the iframe's capabilities to the surface area
+ * actually needed: scripts (player needs them), same-origin (player
+ * uses cookies under its own origin), popups (full-screen toggle).
+ * NO `allow-top-navigation` — a malicious player can't redirect the
+ * parent page off-domain.
+ */
+interface Props {
+  embedUrl: string;
+}
+
+const { embedUrl } = Astro.props;
+---
+
+<figure class="video-embed">
+  <div class="video-embed__frame">
+    <iframe
+      src={embedUrl}
+      title="Embedded video"
+      loading="lazy"
+      allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+      referrerpolicy="strict-origin-when-cross-origin"
+      sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
+    ></iframe>
+  </div>
+</figure>
+
+<style>
+  .video-embed {
+    margin: 24px 0;
+  }
+  .video-embed__frame {
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+  }
+  .video-embed__frame iframe {
+    border: 0;
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+  }
+</style>

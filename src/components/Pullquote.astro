@@ -1,0 +1,48 @@
+---
+/**
+ * Magazine-style pull quote — large italic block set off by horizontal
+ * rules above and below. Inserted via the admin TipTap editor's paired
+ * marker; Vikunja #68.
+ */
+interface Props {
+  /** HTML produced by `marked.parse()` from the inner markdown. */
+  html: string;
+}
+
+const { html } = Astro.props;
+---
+
+<blockquote class="pullquote">
+  <div class="pullquote__body" set:html={html} />
+</blockquote>
+
+<style>
+  .pullquote {
+    border-top: 2px solid var(--color-border, #d1d5db);
+    border-bottom: 2px solid var(--color-border, #d1d5db);
+    color: var(--color-text, #111827);
+    font-size: 1.375rem;
+    font-style: italic;
+    font-weight: 500;
+    line-height: 1.4;
+    margin: 40px auto;
+    max-width: 90%;
+    padding: 28px 16px;
+    text-align: center;
+  }
+  .pullquote__body :global(p) {
+    color: inherit;
+    margin: 0 0 12px 0;
+  }
+  .pullquote__body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+  /* On wider screens, indent the pull quote so it visually breaks out
+     of the body column without escaping it. */
+  @media (min-width: 720px) {
+    .pullquote {
+      font-size: 1.5rem;
+      max-width: 75%;
+    }
+  }
+</style>
