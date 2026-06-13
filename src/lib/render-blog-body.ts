@@ -2,14 +2,16 @@ import { marked } from "marked";
 
 /**
  * Wire-format markers the admin TipTap editor writes (Vikunja #99 Phase 3
- * for collection-cta; Vikunja #68 for callout / pullquote / video). HTML
- * comments are inert in any standard markdown pipeline, so a half-shipped
- * renderer degrades to "block silently omitted" instead of "syntax leaks
- * to the reader".
+ * for collection-cta; Vikunja #68 for callout / pullquote / video; Vikunja
+ * #123 for the optional `align="…"` payload). HTML comments are inert in
+ * any standard markdown pipeline, so a half-shipped renderer degrades to
+ * "block silently omitted" instead of "syntax leaks to the reader".
  *
  * Marker syntax (kept centralized so admin + landing stay in lockstep):
  *   - Vocab CTA       — `<!-- collection-cta -->`                (atom)
+ *                       `<!-- collection-cta align="left|right|full" -->`
  *   - Callout         — `<!-- callout:variant -->…<!-- /callout -->`
+ *                       `<!-- callout:variant align="…" -->…<!-- /callout -->`
  *   - Pullquote       — `<!-- pullquote -->…<!-- /pullquote -->`
  *   - Video embed     — `<!-- video:URL -->`                     (atom)
  *
@@ -17,11 +19,18 @@ import { marked } from "marked";
  * validation. The landing re-checks the video URL because admin trust
  * extends only to the database layer — never trust the wire when you
  * can re-validate cheaply.
+ *
+ * Float alignment: `full` (or missing attr) is the legacy full-width
+ * behavior; `left`/`right` makes the block float at ~40% width so
+ * adjacent paragraphs wrap around it (newspaper layout). Mobile drops
+ * the float and stacks vertically — handled in CSS, not here.
  */
-const COLLECTION_CTA_MARKER = "<!-- collection-cta -->";
 
 const CALLOUT_VARIANTS = ["info", "warning", "tip"] as const;
 type CalloutVariant = (typeof CALLOUT_VARIANTS)[number];
+
+const FLOAT_ALIGNS = ["full", "left", "right"] as const;
+export type FloatAlign = (typeof FLOAT_ALIGNS)[number];
 
 const ALLOWED_VIDEO_HOSTS = [
   "www.youtube.com",
@@ -41,8 +50,8 @@ marked.setOptions({
 
 export type BodyPart =
   | { html: string; type: "html" }
-  | { type: "collection-cta" }
-  | { html: string; type: "callout"; variant: CalloutVariant }
+  | { align: FloatAlign; type: "collection-cta" }
+  | { align: FloatAlign; html: string; type: "callout"; variant: CalloutVariant }
   | { html: string; type: "pullquote" }
   | { type: "video"; embedUrl: string };
 
@@ -51,8 +60,8 @@ export type BodyPart =
  */
 type Token =
   | { kind: "text"; content: string }
-  | { kind: "cta" }
-  | { kind: "callout"; variant: CalloutVariant; inner: string }
+  | { align: FloatAlign; kind: "cta" }
+  | { align: FloatAlign; kind: "callout"; variant: CalloutVariant; inner: string }
   | { kind: "pullquote"; inner: string }
   | { kind: "video"; url: string };
 
@@ -60,10 +69,19 @@ type Token =
  * Single regex that captures any block-opening marker so a single scan
  * pass can find the next block of any type. Paired markers (callout,
  * pullquote) read forward for their matching close after we know the
- * type.
+ * type. The `align="…"` suffix on the CTA / callout markers is optional
+ * (Vikunja #123) — absent means `full`, the legacy full-width default.
  */
 const ANY_MARKER_RE =
-  /<!--\s*(collection-cta|callout:(?:info|warning|tip)|pullquote|video:\S+?)\s*-->/g;
+  /<!--\s*(collection-cta(?:\s+align="(?:full|left|right)")?|callout:(?:info|warning|tip)(?:\s+align="(?:full|left|right)")?|pullquote|video:\S+?)\s*-->/g;
+
+/** Parse the `align="x"` payload from a marker's inner text. Returns
+ *  `full` when the attribute is absent or malformed. Single source of
+ *  truth so future marker types (image inline, etc.) reuse it. */
+function parseAlign(inner: string): FloatAlign {
+  const m = inner.match(/align="(full|left|right)"/);
+  return m ? (m[1] as FloatAlign) : "full";
+}
 
 function findClose(body: string, from: number, closeTag: string): number {
   const closeRe = new RegExp(`<!--\\s*\\/${closeTag}\\s*-->`, "g");
@@ -90,14 +108,18 @@ function tokenize(body: string): Token[] {
     const inner = match[1];
     const consumed = match.index + match[0].length;
 
-    if (inner === "collection-cta") {
-      tokens.push({ kind: "cta" });
+    if (inner.startsWith("collection-cta")) {
+      tokens.push({ kind: "cta", align: parseAlign(inner) });
       pos = consumed;
       continue;
     }
 
     if (inner.startsWith("callout:")) {
-      const variant = inner.slice("callout:".length) as CalloutVariant;
+      // Inner shape is `callout:variant` or `callout:variant align="…"`.
+      // Pull out the variant word and re-use `parseAlign` for the suffix.
+      const variantMatch = inner.match(/^callout:(info|warning|tip)/);
+      const variant = (variantMatch?.[1] ?? "info") as CalloutVariant;
+      const align = parseAlign(inner);
       const closeIdx = findClose(body, consumed, "callout");
       if (closeIdx === -1) {
         // Unclosed — emit the opening marker as literal text so the
@@ -108,6 +130,7 @@ function tokenize(body: string): Token[] {
         continue;
       }
       tokens.push({
+        align,
         kind: "callout",
         variant,
         inner: body.slice(consumed, closeIdx),
@@ -253,6 +276,11 @@ function injectCtaAtMidpoint(tokens: Token[]): Token[] {
   );
   if (totalLen === 0) return tokens;
 
+  // Auto-inserted CTAs default to full-width so legacy posts that never
+  // had author-placed alignment keep the historic look. Admins who want
+  // a floated CTA must place the marker themselves via the bubble menu.
+  const synthetic: Token = { align: "full", kind: "cta" };
+
   const halfway = totalLen / 2;
   let acc = 0;
   for (let i = 0; i < tokens.length; i++) {
@@ -261,14 +289,14 @@ function injectCtaAtMidpoint(tokens: Token[]): Token[] {
       if (acc >= halfway) {
         return [
           ...tokens.slice(0, i + 1),
-          { kind: "cta" } as Token,
+          synthetic,
           ...tokens.slice(i + 1),
         ];
       }
     }
   }
   // Body has block tokens (callouts, videos) but no text — append at end.
-  return [...tokens, { kind: "cta" } as Token];
+  return [...tokens, synthetic];
 }
 
 export interface RenderOptions {
@@ -308,9 +336,10 @@ export function renderBlogBody(
           if (!t.content.trim()) return null;
           return { html: marked.parse(t.content) as string, type: "html" };
         case "cta":
-          return { type: "collection-cta" };
+          return { align: t.align, type: "collection-cta" };
         case "callout":
           return {
+            align: t.align,
             html: marked.parse(t.inner) as string,
             type: "callout",
             variant: t.variant,
