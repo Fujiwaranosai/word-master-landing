@@ -13,7 +13,13 @@ interface Props {
   title: string;
   pubDate: Date;
   description: string;
-  author: string;
+  /** Kept for backwards compatibility — every post is published under
+   *  the site brand, so we no longer render a per-article byline or
+   *  feed `author` into JSON-LD. The prop stays in the signature so
+   *  the existing caller in pages/blog/[...slug].astro doesn't need a
+   *  matching edit and a future per-author scheme can re-use the
+   *  field. */
+  author?: string;
   tags?: string[];
   /** Editorial topic — rendered as a chip next to the title; the
    *  per-topic accent color helps readers instantly tell a vocab
@@ -39,7 +45,6 @@ const {
   title,
   pubDate,
   description,
-  author,
   tags = [],
   topic,
   heroImageUrl,
@@ -70,7 +75,11 @@ const articleSchema: Record<string, unknown> = {
   headline: title,
   description,
   datePublished: pubDate.toISOString(),
-  author: { '@type': 'Organization', name: author, url: SITE_URL },
+  // All articles are published under the site brand — every post is
+  // authored in-house, so we credit the Organization rather than a
+  // per-post user. Keeps structured data aligned with the publisher
+  // identity instead of leaking an internal "admin" handle.
+  author: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
   publisher: { '@id': `${SITE_URL}/#organization` },
   mainEntityOfPage: articleUrl,
   keywords: tags.join(', '),
@@ -145,8 +154,6 @@ const pageSchema = breadcrumbSchema ? [articleSchema, breadcrumbSchema] : articl
           <h1>{title}</h1>
           <div class="blog-post__meta">
             <time datetime={pubDate.toISOString()}>{formattedDate}</time>
-            <span class="blog-post__meta-sep" aria-hidden="true">·</span>
-            <span class="blog-post__author">by {author}</span>
           </div>
           {tags.length > 0 && (
             <div class="blog-post__tags">
