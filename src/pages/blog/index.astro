@@ -322,54 +322,10 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
     padding: 6px 10px;
   }
 
-  .blog-card__topic {
-    background: #dbeafe;
-    border-radius: 999px;
-    color: #1e40af;
-    display: inline-block;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    margin-bottom: 10px;
-    padding: 3px 10px;
-    text-transform: uppercase;
-  }
-  .blog-card__topic[data-topic="writing"]          { background: #ede9fe; color: #5b21b6; }
-  .blog-card__topic[data-topic="announcement"]     { background: #d1fae5; color: #065f46; }
-  .blog-card__topic[data-topic="learning-science"] { background: #ffedd5; color: #9a3412; }
-  .blog-card__topic[data-topic="story"]            { background: #ffe4e6; color: #9f1239; }
-
-  .blog-listing__pagination {
-    align-items: center;
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    margin: 40px 0 8px;
-  }
-  .blog-listing__page-btn {
-    background: transparent;
-    border: 1px solid var(--color-border, #d1d5db);
-    border-radius: 6px;
-    color: var(--color-text);
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 600;
-    padding: 8px 18px;
-    transition: all 0.15s ease;
-  }
-  .blog-listing__page-btn:hover:not(:disabled) {
-    background: var(--color-primary, #2563eb);
-    border-color: var(--color-primary, #2563eb);
-    color: #fff;
-  }
-  .blog-listing__page-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.4;
-  }
-  .blog-listing__page-status {
-    color: var(--color-text-secondary);
-    font-size: 0.9rem;
-  }
+  /* .blog-card__topic, .blog-listing__pagination, .blog-listing__page-btn,
+     .blog-listing__page-status moved to global.css so the search-results
+     page can use them too (Astro's scoped styles wouldn't reach
+     dynamically-injected cards on /blog/search). */
 
   .blog-listing__empty-filter {
     color: var(--color-text-secondary);

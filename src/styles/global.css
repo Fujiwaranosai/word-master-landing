@@ -1984,6 +1984,60 @@ body.embed-app .legal {
   border-radius: 100px;
 }
 
+/* Topic chip + pagination styles for the blog listing AND the
+   search-results page. Lived in index.astro's scoped style block
+   originally, which meant they never applied on search.astro (Astro
+   hashes scoped selectors per-component). Moved here so any blog
+   surface can use the same affordances. */
+.blog-card__topic {
+  background: #dbeafe;
+  border-radius: 999px;
+  color: #1e40af;
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+  text-transform: uppercase;
+}
+.blog-card__topic[data-topic="writing"]          { background: #ede9fe; color: #5b21b6; }
+.blog-card__topic[data-topic="announcement"]     { background: #d1fae5; color: #065f46; }
+.blog-card__topic[data-topic="learning-science"] { background: #ffedd5; color: #9a3412; }
+.blog-card__topic[data-topic="story"]            { background: #ffe4e6; color: #9f1239; }
+
+.blog-listing__pagination {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin: 40px 0 8px;
+}
+.blog-listing__page-btn {
+  background: transparent;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: 6px;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  transition: all 0.15s ease;
+}
+.blog-listing__page-btn:hover:not(:disabled) {
+  background: var(--color-primary, #2563eb);
+  border-color: var(--color-primary, #2563eb);
+  color: #fff;
+}
+.blog-listing__page-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+.blog-listing__page-status {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
 /* ============================================
    Blog Post Page
    ============================================ */
