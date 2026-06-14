@@ -202,10 +202,16 @@ const apiBaseUrl =
           // same inner structure, same topic chip + date + h2 + p
           // shape. The only difference is that <h2> and <p> may carry
           // <mark> spans from the backend highlights.
+          // NOTE: do NOT add `fade-in` here. That class ships with
+          // opacity: 0 and waits for the page-load IntersectionObserver
+          // to add `.visible`. The observer only scans the static SSR
+          // markup once at load; dynamically-injected cards never get
+          // observed, so they'd stay invisible (cursor hover would
+          // still detect the anchor — the exact symptom we just fixed).
           return `
             <a
               href="/blog/${escapeHtml(h.slug)}/"
-              class="blog-card fade-in"
+              class="blog-card"
               data-topic="${escapeHtml(h.topic)}"
             >
               <div class="blog-card__content">
