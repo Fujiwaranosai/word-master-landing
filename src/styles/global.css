@@ -2091,14 +2091,6 @@ body.embed-app .legal {
   gap: 8px;
 }
 
-.blog-post__meta-sep {
-  color: var(--color-text-tertiary, #cbd5e1);
-}
-
-.blog-post__author {
-  margin-left: 0;
-}
-
 .blog-post__tags {
   display: flex;
   flex-wrap: wrap;
