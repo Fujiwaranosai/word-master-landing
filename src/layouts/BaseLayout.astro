@@ -26,6 +26,12 @@ interface Props {
    * Article for blog posts, etc.) without re-declaring the root.
    */
   pageSchema?: unknown;
+  /**
+   * Force noindex regardless of PUBLIC_ALLOW_INDEXING. Use for pages
+   * that should never be indexed even in prod (search results,
+   * thin/dynamic query-driven pages).
+   */
+  noindex?: boolean;
 }
 
 const {
@@ -39,6 +45,7 @@ const {
   canonicalPath,
   currentPage = '',
   pageSchema,
+  noindex = false,
 } = Astro.props;
 
 const siteUrl = 'https://vocabmine.com';
@@ -117,7 +124,7 @@ const embedMode = Astro.url.searchParams.get('embed') === 'app';
     rel="stylesheet"
   />
   <title>{title}</title>
-  {!allowIndexing && <meta name="robots" content="noindex, nofollow" />}
+  {(noindex || !allowIndexing) && <meta name="robots" content="noindex, nofollow" />}
   {description && <meta name="description" content={description} />}
   {ogTitle && <meta property="og:title" content={ogTitle} />}
   {ogDescription && <meta property="og:description" content={ogDescription} />}
