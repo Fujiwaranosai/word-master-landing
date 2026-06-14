@@ -65,7 +65,7 @@ const bodyParts = renderBlogBody(article.body, {
       return <Fragment set:html={part.html} />;
     }
     if (part.type === 'callout') {
-      return <Callout html={part.html} variant={part.variant} />;
+      return <Callout html={part.html} variant={part.variant} align={part.align} />;
     }
     if (part.type === 'pullquote') {
       return <Pullquote html={part.html} />;
@@ -80,6 +80,7 @@ const bodyParts = renderBlogBody(article.body, {
           collectionSlug={article.collection.slug}
           words={article.suggestedVocab.map((v) => v.word)}
           title={`Learn this vocabulary — ${article.collection.name}`}
+          align={part.align}
         />
       );
     }

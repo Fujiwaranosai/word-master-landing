@@ -180,6 +180,52 @@ const pageSchema = breadcrumbSchema ? [articleSchema, breadcrumbSchema] : articl
   </article>
 </BaseLayout>
 
+<style is:global>
+  /* Inline-image float layout (Vikunja #123). The image markup is raw
+     HTML rendered via `marked.parse()` then `set:html`, so the rules
+     can't live inside a scoped Astro <style> block — Astro's scoping
+     prefix would only match nodes authored in this file, not the ones
+     injected at runtime. `is:global` ships them as plain global CSS,
+     applied site-wide via the `.blog-post__body` ancestor so they
+     can't bleed into the rest of the marketing site. */
+  .blog-post__body img.align-full {
+    clear: both;
+    display: block;
+    margin: 1em auto;
+    max-width: 100%;
+  }
+  .blog-post__body img.align-left {
+    clear: left;
+    float: left;
+    height: auto;
+    margin: 0.5em 1.5em 0.5em 0;
+    max-width: 100%;
+    width: 40%;
+  }
+  .blog-post__body img.align-right {
+    clear: right;
+    float: right;
+    height: auto;
+    margin: 0.5em 0 0.5em 1.5em;
+    max-width: 100%;
+    width: 40%;
+  }
+  @media (max-width: 768px) {
+    .blog-post__body img.align-left,
+    .blog-post__body img.align-right {
+      float: none;
+      margin: 1em 0;
+      width: 100%;
+    }
+  }
+  /* Clearfix on the body so the article footer (sources block) doesn't
+     wrap into a still-floating image / callout / CTA above it. */
+  .blog-post__body::after {
+    clear: both;
+    content: "";
+    display: table;
+  }
+</style>
 <style>
   .blog-post__hero {
     margin: 0 0 2rem 0;

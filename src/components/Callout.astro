@@ -8,9 +8,14 @@ interface Props {
   /** HTML already produced by `marked.parse()` from the inner markdown. */
   html: string;
   variant: "info" | "warning" | "tip";
+  /** Newspaper-style float position. Vikunja #123. Default `full`
+   *  preserves the historic full-width block; `left`/`right` floats the
+   *  callout at ~40% width so adjacent paragraphs wrap around it.
+   *  Mobile (≤768px) drops the float and stacks. */
+  align?: "full" | "left" | "right";
 }
 
-const { html, variant } = Astro.props;
+const { html, variant, align = "full" } = Astro.props;
 const labels: Record<Props["variant"], string> = {
   info: "Note",
   tip: "Tip",
@@ -18,7 +23,7 @@ const labels: Record<Props["variant"], string> = {
 };
 ---
 
-<aside class="callout" data-variant={variant} role="note">
+<aside class={`callout float-${align}`} data-variant={variant} data-align={align} role="note">
   <div class="callout__label">{labels[variant]}</div>
   <div class="callout__body" set:html={html} />
 </aside>
@@ -88,5 +93,32 @@ const labels: Record<Props["variant"], string> = {
   :global([data-theme="dark"]) .callout[data-variant="tip"] {
     background: #052e1f;
     color: #a7f3d0;
+  }
+
+  /* Newspaper-style float layout (Vikunja #123). Same .float-{align}
+     pattern used by CollectionCta and inline images, so any future
+     floatable component can drop in without re-declaring the rules. */
+  .callout.float-full {
+    clear: both;
+  }
+  .callout.float-left {
+    clear: left;
+    float: left;
+    margin: 0.5em 1.5em 0.5em 0;
+    width: 40%;
+  }
+  .callout.float-right {
+    clear: right;
+    float: right;
+    margin: 0.5em 0 0.5em 1.5em;
+    width: 40%;
+  }
+  @media (max-width: 768px) {
+    .callout.float-left,
+    .callout.float-right {
+      float: none;
+      margin: 24px 0;
+      width: 100%;
+    }
   }
 </style>

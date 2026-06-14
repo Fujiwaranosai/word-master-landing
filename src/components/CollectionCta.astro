@@ -17,14 +17,19 @@ interface Props {
   collectionSlug: string;
   words?: string[];
   title?: string;
+  /** Newspaper-style float position. Vikunja #123. Default `full`
+   *  preserves the historic full-width block; `left`/`right` floats
+   *  the CTA at ~40% width so adjacent paragraphs wrap around it.
+   *  Mobile (≤768px) drops the float and stacks. */
+  align?: 'full' | 'left' | 'right';
 }
 
-const { collectionSlug, words, title = 'Learn these words' } = Astro.props;
+const { collectionSlug, words, title = 'Learn these words', align = 'full' } = Astro.props;
 const ctaUrl = `${APP_URL}/collections/by-slug/${collectionSlug}`;
 const wordCount = words?.length ?? 0;
 ---
 
-<aside class="collection-cta">
+<aside class={`collection-cta float-${align}`} data-align={align}>
   <div class="collection-cta__eyebrow">From this article</div>
   <h3 class="collection-cta__title">{title}</h3>
   {words && words.length > 0 && (
@@ -147,6 +152,34 @@ const wordCount = words?.length ?? 0;
     .collection-cta__btn {
       width: 100%;
       justify-content: center;
+    }
+  }
+
+  /* Newspaper-style float layout (Vikunja #123). `full` is the default
+     (no float). `left`/`right` shrinks the CTA to ~40% and floats it so
+     the surrounding paragraphs wrap around. Mobile drops back to full
+     width because a 40% float on a phone screen is unreadable. */
+  .collection-cta.float-full {
+    clear: both;
+  }
+  .collection-cta.float-left {
+    clear: left;
+    float: left;
+    margin: 0.5em 1.5em 0.5em 0;
+    width: 40%;
+  }
+  .collection-cta.float-right {
+    clear: right;
+    float: right;
+    margin: 0.5em 0 0.5em 1.5em;
+    width: 40%;
+  }
+  @media (max-width: 768px) {
+    .collection-cta.float-left,
+    .collection-cta.float-right {
+      float: none;
+      margin: 40px 0;
+      width: 100%;
     }
   }
 </style>
