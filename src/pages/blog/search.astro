@@ -313,13 +313,20 @@ const apiBaseUrl =
     const q = (params.get('q') ?? '').slice(0, 200).trim();
     const page = Math.max(1, parseInt(params.get('page') ?? '1', 10) || 1);
 
-    // Always pre-fill the search box from the URL so users can edit
-    // their query without re-typing it.
-    input.value = q;
-    // Trigger the clear button's visibility sync.
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    // Belt-and-braces for the empty-query case: if someone bookmarks
+    // /blog/search?q= or strips the q manually, send them to /blog/
+    // (the full listing) — the BlogSearch component's submit handler
+    // catches the common form-submit path; this catches direct hits.
+    if (q.length === 0) {
+      window.location.replace('/blog/');
+      // No further script work after a navigation.
+    } else {
+      // Always pre-fill the search box from the URL so users can edit
+      // their query without re-typing it.
+      input.value = q;
+      // Trigger the clear button's visibility sync.
+      input.dispatchEvent(new Event('input', { bubbles: true }));
 
-    if (q.length > 0) {
       summaryEl.textContent = '';
       runSearch(q, page);
     }
