@@ -57,25 +57,29 @@ const apiBaseUrl =
         data-api-base-url={apiBaseUrl}
       >
         <p class="blog-search-results__status" data-search-status hidden></p>
-        <ul class="blog-search-results__list" data-search-list></ul>
+        {/* Reuse the same .blog-listing__grid + .blog-card markup as the
+            blog index so search-result cards visually match the regular
+            listing exactly. Cards are injected client-side by the script
+            below. */}
+        <div class="blog-listing__grid" data-search-list></div>
         <nav
-          class="blog-search-results__pagination"
+          class="blog-listing__pagination"
           aria-label="Search results pagination"
           data-search-pagination
           hidden
         >
           <button
-            class="blog-search-results__page-btn"
+            class="blog-listing__page-btn"
             type="button"
             data-search-prev
           >
             &larr; Previous
           </button>
-          <span class="blog-search-results__page-status" data-search-page-status>
+          <span class="blog-listing__page-status" data-search-page-status>
             Page 1
           </span>
           <button
-            class="blog-search-results__page-btn"
+            class="blog-listing__page-btn"
             type="button"
             data-search-next
           >
@@ -169,8 +173,19 @@ const apiBaseUrl =
       });
     }
 
+    /** Topic-slug → display label. Mirrors ARTICLE_TOPIC_LABELS in
+     *  word-master-backend's articles.constants.ts (kept in sync with
+     *  the blog index page). Unknown slugs fall back to title-cased
+     *  text so a future enum addition still renders sensibly. */
+    const TOPIC_LABELS: Record<string, string> = {
+      vocabulary: 'Vocabulary',
+      writing: 'Writing',
+      announcement: 'Announcement',
+      'learning-science': 'Learning Science',
+      story: 'Story',
+    };
     function topicLabel(topic: string): string {
-      return topic.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      return TOPIC_LABELS[topic] ?? topic.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
     }
 
     function renderHits(hits: SearchHit[]): string {
@@ -182,23 +197,24 @@ const apiBaseUrl =
           const bodyHtml = h.highlightBody
             ? escapeAllowMark(h.highlightBody)
             : escapeHtml(h.description);
-          const tagsHtml = (h.tags ?? [])
-            .map((t) => `<span class="blog-search-results__tag">${escapeHtml(t)}</span>`)
-            .join('');
-          // The entire card is wrapped in an anchor so clicking anywhere
-          // on it navigates to the article.
+          // Mirror the blog-index card markup exactly so search results
+          // look identical to the listing — same .blog-card class,
+          // same inner structure, same topic chip + date + h2 + p
+          // shape. The only difference is that <h2> and <p> may carry
+          // <mark> spans from the backend highlights.
           return `
-            <li class="blog-search-results__hit">
-              <a href="/blog/${escapeHtml(h.slug)}/" class="blog-search-results__hit-link">
-                <div class="blog-search-results__hit-meta">
-                  <span class="blog-search-results__hit-topic" data-topic="${escapeHtml(h.topic)}">${escapeHtml(topicLabel(h.topic))}</span>
-                  <time class="blog-search-results__hit-date" datetime="${new Date(h.publishedAt * 1000).toISOString()}">${formatDate(h.publishedAt)}</time>
-                </div>
-                <h2 class="blog-search-results__hit-title">${titleHtml}</h2>
-                <p class="blog-search-results__hit-snippet">${bodyHtml}</p>
-                ${tagsHtml ? `<div class="blog-search-results__tags">${tagsHtml}</div>` : ''}
-              </a>
-            </li>
+            <a
+              href="/blog/${escapeHtml(h.slug)}/"
+              class="blog-card fade-in"
+              data-topic="${escapeHtml(h.topic)}"
+            >
+              <div class="blog-card__content">
+                <span class="blog-card__topic" data-topic="${escapeHtml(h.topic)}">${escapeHtml(topicLabel(h.topic))}</span>
+                <time datetime="${new Date(h.publishedAt * 1000).toISOString()}">${formatDate(h.publishedAt)}</time>
+                <h2>${titleHtml}</h2>
+                <p>${bodyHtml}</p>
+              </div>
+            </a>
           `;
         })
         .join('');
@@ -252,11 +268,12 @@ const apiBaseUrl =
         if (total === 0) {
           setStatus('');
           summaryEl!.textContent = '';
-          // Empty state — show inline in the list area for visibility.
+          // Empty state — reuse the listing page's empty-state class so
+          // it visually matches the rest of the blog area.
           listEl!.innerHTML = `
-            <li class="blog-search-results__empty">
+            <p class="blog-listing__empty">
               No results found for &ldquo;${escapeHtml(q)}&rdquo;.
-            </li>
+            </p>
           `;
           return;
         }
@@ -343,11 +360,10 @@ const apiBaseUrl =
     text-decoration: underline;
   }
 
-  .blog-search-results {
-    margin: 0 auto;
-    max-width: 760px;
-  }
-
+  /* Only the wrapper + ephemeral status text need bespoke styling here;
+     cards reuse .blog-card from blog-index, empty-state reuses
+     .blog-listing__empty, and pagination reuses .blog-listing__pagination
+     so search results look identical to the listing. */
   .blog-search-results__status {
     color: var(--color-text-secondary);
     font-size: 0.95rem;
@@ -355,150 +371,13 @@ const apiBaseUrl =
     text-align: center;
   }
 
-  .blog-search-results__list {
-    display: grid;
-    gap: 16px;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .blog-search-results__hit {
-    background: var(--color-bg, #fff);
-    border: 1px solid var(--color-border, #e5e7eb);
-    border-radius: 12px;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-  }
-  .blog-search-results__hit:hover {
-    border-color: var(--color-primary, #2563eb);
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.12);
-    transform: translateY(-2px);
-  }
-  .blog-search-results__hit-link {
-    color: inherit;
-    display: block;
-    padding: 22px 24px;
-    text-decoration: none;
-  }
-  .blog-search-results__hit-link:hover {
-    color: inherit;
-  }
-  .blog-search-results__hit-meta {
-    align-items: center;
-    display: flex;
-    gap: 12px;
-    margin-bottom: 10px;
-  }
-  .blog-search-results__hit-topic {
-    background: #dbeafe;
-    border-radius: 999px;
-    color: #1e40af;
-    display: inline-block;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    padding: 3px 10px;
-    text-transform: uppercase;
-  }
-  .blog-search-results__hit-topic[data-topic="writing"]          { background: #ede9fe; color: #5b21b6; }
-  .blog-search-results__hit-topic[data-topic="announcement"]     { background: #d1fae5; color: #065f46; }
-  .blog-search-results__hit-topic[data-topic="learning-science"] { background: #ffedd5; color: #9a3412; }
-  .blog-search-results__hit-topic[data-topic="story"]            { background: #ffe4e6; color: #9f1239; }
-  .blog-search-results__hit-date {
-    color: var(--color-text-secondary);
-    font-size: 0.8125rem;
-  }
-  .blog-search-results__hit-title {
-    color: var(--color-text);
-    font-size: 1.25rem;
-    font-weight: 600;
-    line-height: 1.3;
-    margin: 0 0 8px;
-  }
-  .blog-search-results__hit-snippet {
-    color: var(--color-text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.6;
-    margin: 0;
-    /* Preserve newlines coming back from highlightBody so paragraph
-       breaks render the way the backend laid them out. */
-    white-space: pre-wrap;
-  }
-  /* The mark tags ship inside highlightTitle/highlightBody — keep the
-     same yellow accent the inline dropdown used. */
-  .blog-search-results__hit-title :global(mark),
-  .blog-search-results__hit-snippet :global(mark) {
+  /* <mark> spans inside the backend's highlightTitle/highlightBody. The
+     `:global()` wrapper is required because the markup is injected via
+     innerHTML, which Astro's scoped-style hashing can't reach. */
+  .blog-card :global(mark) {
     background: #fef3c7;
     border-radius: 2px;
     color: inherit;
     padding: 0 2px;
-  }
-
-  .blog-search-results__tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 12px;
-  }
-  .blog-search-results__tag {
-    background: var(--color-primary-light);
-    border-radius: 100px;
-    color: var(--color-primary-on-light);
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 3px 10px;
-  }
-
-  .blog-search-results__empty {
-    background: var(--color-bg-alt, #f5f7fb);
-    border: 1px dashed var(--color-border, #d1d5db);
-    border-radius: 12px;
-    color: var(--color-text-secondary);
-    font-size: 1rem;
-    list-style: none;
-    margin: 0;
-    padding: 36px 20px;
-    text-align: center;
-  }
-
-  .blog-search-results__pagination {
-    align-items: center;
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    margin: 32px 0 8px;
-  }
-  .blog-search-results__page-btn {
-    background: transparent;
-    border: 1px solid var(--color-border, #d1d5db);
-    border-radius: 6px;
-    color: var(--color-text);
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 600;
-    padding: 8px 18px;
-    transition: all 0.15s ease;
-  }
-  .blog-search-results__page-btn:hover:not(:disabled) {
-    background: var(--color-primary, #2563eb);
-    border-color: var(--color-primary, #2563eb);
-    color: #fff;
-  }
-  .blog-search-results__page-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.4;
-  }
-  .blog-search-results__page-status {
-    color: var(--color-text-secondary);
-    font-size: 0.9rem;
-  }
-
-  @media (max-width: 600px) {
-    .blog-search-results__hit-link {
-      padding: 18px 18px;
-    }
-    .blog-search-results__hit-meta {
-      flex-wrap: wrap;
-    }
   }
 </style>
