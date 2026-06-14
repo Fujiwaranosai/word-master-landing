@@ -82,6 +82,7 @@
    */
   const input = document.getElementById('blog-search-input') as HTMLInputElement | null;
   const clearBtn = document.querySelector<HTMLButtonElement>('[data-blog-search-clear]');
+  const form = input?.closest('form');
 
   if (input && clearBtn) {
     function syncClearVisibility(): void {
@@ -96,6 +97,18 @@
     });
 
     syncClearVisibility();
+  }
+
+  // When the user submits with an empty query (cleared the input then
+  // hit Enter / clicked the magnifier), send them to /blog/ — they
+  // clearly want "all posts", not the empty-state search page.
+  if (form && input) {
+    form.addEventListener('submit', (e) => {
+      if (input.value.trim().length === 0) {
+        e.preventDefault();
+        window.location.assign('/blog/');
+      }
+    });
   }
 </script>
 
