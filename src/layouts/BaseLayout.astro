@@ -138,8 +138,14 @@ const embedMode = Astro.url.searchParams.get('embed') === 'app';
   {twitterCard && ogDescription && <meta name="twitter:description" content={ogDescription} />}
   {twitterCard && <meta name="twitter:image" content={ogImageUrl} />}
   {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
-  <link rel="icon" type="image/png" sizes="192x192" href="/logo192.png" />
-  <link rel="apple-touch-icon" href="/logo192.png" />
+  {/* Milestone 1 favicon set (Vikunja #85), synced from the web app so the
+      landing matches. SVG favicons swap with the OS colour scheme; the ICO
+      fallback covers browsers that don't pick the right SVG (mainly older
+      Safari). */}
+  <link rel="icon" type="image/svg+xml" href="/favicon-light.svg" media="(prefers-color-scheme: light)" />
+  <link rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   {/* JSON-LD structured data — emitted only when indexing is allowed
       so dev/staging environments don't pollute Google's understanding
       of the site with non-canonical hostnames. */}
