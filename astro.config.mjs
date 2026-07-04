@@ -31,5 +31,17 @@ export default defineConfig({
   // @astrojs/sitemap runs before seoIntegration so the sitemap file
   // is written first; seoIntegration then finalises robots.txt that
   // references it.
-  integrations: [sitemap(), seoIntegration()],
+  integrations: [
+    sitemap({
+      // Keep noindex pages out of the sitemap so it only advertises the
+      // canonical, indexable URLs. The per-version legal pages
+      // (/terms/<date>, /privacy/<date>) and the /legal version index are
+      // noindex (see their BaseLayout `noindex` prop) — only the canonical
+      // /terms and /privacy should be indexed.
+      filter: (page) =>
+        !/\/(terms|privacy)\/\d{4}-\d{2}-\d{2}\/?$/.test(page) &&
+        !/\/legal\/?$/.test(page),
+    }),
+    seoIntegration(),
+  ],
 });

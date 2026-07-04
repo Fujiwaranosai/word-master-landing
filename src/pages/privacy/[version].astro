@@ -1,0 +1,52 @@
+---
+/**
+ * Permanent, immutable per-version Privacy Policy pages at
+ * /privacy/<YYYY-MM-DD> (e.g. /privacy/2026-04-12). One static page is built
+ * per registered version. These are intentionally `noindex` so only the
+ * canonical /privacy (latest) is indexed; the permanent URLs exist so consent
+ * records and external references always resolve to the exact text a user
+ * agreed to.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { SITE_NAME } from '../../consts';
+import { LEGAL, formatVersionDate } from '../../legal';
+
+const versionComponents = import.meta.glob<{ default: any }>(
+  '../../components/legal/privacy/*.astro',
+  { eager: true },
+);
+
+export function getStaticPaths() {
+  return Object.keys(LEGAL.privacy.versions).map((version) => ({
+    params: { version },
+  }));
+}
+
+const { version } = Astro.params;
+const entry = Object.entries(versionComponents).find(([path]) =>
+  path.endsWith(`/${version}.astro`),
+);
+if (!entry) {
+  throw new Error(`No Privacy component found for version "${version}".`);
+}
+const PrivacyVersion = entry[1].default;
+const isCurrent = version === LEGAL.privacy.current;
+---
+
+<BaseLayout
+  title={`Privacy Policy (${formatVersionDate(version!)}) — ${SITE_NAME}`}
+  description={`Archived version of the ${SITE_NAME} Privacy Policy effective ${formatVersionDate(version!)}.`}
+  canonicalPath={`/privacy/${version}/`}
+  currentPage="privacy"
+  noindex={true}
+>
+  {!isCurrent && (
+    <div class="container">
+      <p class="legal__archive-notice">
+        You are viewing an archived version of our Privacy Policy. The current
+        version is available at <a href="/privacy/">/privacy</a>.
+      </p>
+    </div>
+  )}
+  <PrivacyVersion />
+</BaseLayout>
