@@ -1,0 +1,54 @@
+---
+/**
+ * Legal versions index at /legal — lists every published version of the Terms
+ * of Service and Privacy Policy with its effective date, linking to each
+ * permanent (immutable) per-version URL. Marks which version is current.
+ * `noindex` so it doesn't compete with the canonical /terms and /privacy.
+ *
+ * The machine-readable equivalent (with content hashes) is emitted at
+ * /legal/versions.json by scripts/gen-legal-manifest.mjs.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE_NAME } from '../consts';
+import { LEGAL_DOCS_KEYS, LEGAL, LEGAL_DOC_LABELS, listVersions, formatVersionDate } from '../legal';
+---
+
+<BaseLayout
+  title={`Legal Document Versions — ${SITE_NAME}`}
+  description={`Version history of the ${SITE_NAME} Terms of Service and Privacy Policy.`}
+  canonicalPath="/legal/"
+  noindex={true}
+>
+  <section class="legal">
+    <div class="container">
+      <div class="legal__content">
+        <h1>Legal Document Versions</h1>
+        <p class="legal__date">Version history &amp; permanent archive links</p>
+
+        <p>
+          Below is the complete version history of our legal documents. Each
+          version has a permanent URL and its text is never changed after
+          publication. The current version of each document is also served at its
+          canonical URL: <a href="/terms/">/terms</a> and
+          <a href="/privacy/">/privacy</a>. A machine-readable manifest with
+          content hashes is available at
+          <a href="/legal/versions.json">/legal/versions.json</a>.
+        </p>
+
+        {LEGAL_DOCS_KEYS.map((doc) => (
+          <>
+            <h2>{LEGAL_DOC_LABELS[doc]}</h2>
+            <ul>
+              {listVersions(doc).map((version) => (
+                <li>
+                  <a href={`/${doc}/${version}/`}>{formatVersionDate(version)}</a>
+                  {version === LEGAL[doc].current && <span> — current</span>}
+                </li>
+              ))}
+            </ul>
+          </>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

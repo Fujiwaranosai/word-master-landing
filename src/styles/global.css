@@ -1733,6 +1733,22 @@ body.embed-app .legal {
   text-decoration: underline;
 }
 
+/* Banner shown atop an archived (non-current) legal version page. */
+.legal__archive-notice {
+  max-width: 760px;
+  margin: 24px auto -16px;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.1));
+  border-radius: 8px;
+  background: var(--color-surface-muted, rgba(0, 0, 0, 0.03));
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+.legal__archive-notice a {
+  text-decoration: underline;
+}
+
 /* ============================================
    Responsive
    ============================================ */

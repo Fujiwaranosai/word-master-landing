@@ -1,0 +1,51 @@
+---
+/**
+ * Permanent, immutable per-version Terms of Service pages at
+ * /terms/<YYYY-MM-DD> (e.g. /terms/2026-04-12). One static page is built per
+ * registered version. These are intentionally `noindex` so only the canonical
+ * /terms (latest) is indexed; the permanent URLs exist so consent records and
+ * external references always resolve to the exact text a user agreed to.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { SITE_NAME } from '../../consts';
+import { LEGAL, formatVersionDate } from '../../legal';
+
+const versionComponents = import.meta.glob<{ default: any }>(
+  '../../components/legal/terms/*.astro',
+  { eager: true },
+);
+
+export function getStaticPaths() {
+  return Object.keys(LEGAL.terms.versions).map((version) => ({
+    params: { version },
+  }));
+}
+
+const { version } = Astro.params;
+const entry = Object.entries(versionComponents).find(([path]) =>
+  path.endsWith(`/${version}.astro`),
+);
+if (!entry) {
+  throw new Error(`No Terms component found for version "${version}".`);
+}
+const TermsVersion = entry[1].default;
+const isCurrent = version === LEGAL.terms.current;
+---
+
+<BaseLayout
+  title={`Terms of Service (${formatVersionDate(version!)}) — ${SITE_NAME}`}
+  description={`Archived version of the ${SITE_NAME} Terms of Service effective ${formatVersionDate(version!)}.`}
+  canonicalPath={`/terms/${version}/`}
+  currentPage="terms"
+  noindex={true}
+>
+  {!isCurrent && (
+    <div class="container">
+      <p class="legal__archive-notice">
+        You are viewing an archived version of our Terms of Service. The current
+        version is available at <a href="/terms/">/terms</a>.
+      </p>
+    </div>
+  )}
+  <TermsVersion />
+</BaseLayout>

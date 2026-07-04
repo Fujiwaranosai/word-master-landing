@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "gen:legal": "node scripts/gen-legal-manifest.mjs",
+    "build": "node scripts/gen-legal-manifest.mjs && astro build",
     "preview": "astro preview",
     "cdk:install": "cd cdk && npm install",
     "cdk:synth": "cd cdk && npm run synth",

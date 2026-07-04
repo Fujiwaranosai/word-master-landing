@@ -9,6 +9,9 @@ dist/
 .astro/
 node_modules/
 
+# Build-generated legal hash manifest (emitted by scripts/gen-legal-manifest.mjs)
+public/legal/versions.json
+
 # CDK
 cdk/node_modules
 cdk/cdk.out
