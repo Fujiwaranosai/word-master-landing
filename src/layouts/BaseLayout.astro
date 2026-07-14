@@ -90,6 +90,11 @@ const schemaPayload = {
 const allowIndexing = import.meta.env.PUBLIC_ALLOW_INDEXING === 'true';
 const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 
+// Meta (Facebook) Pixel (Vikunja #150). Public ID, not a secret. Gating to
+// the prod hosts happens at RUNTIME inside the init script below — the SSR
+// build has no `location.hostname`, so we can't gate here in the frontmatter.
+const META_PIXEL_ID = '1373132401420106';
+
 // Embed mode: when loaded inside a mobile app WebView (or iframe) via
 // `?embed=app`, hide the marketing chrome (nav + footer) so the legal
 // content reads cleanly without context-switching back to the site.
@@ -163,6 +168,28 @@ const embedMode = Astro.url.searchParams.get('embed') === 'app';
       </script>
     </>
   )}
+  {/* Meta (Facebook) Pixel base code (Vikunja #150). The loader always
+      installs `fbq`, but init + PageView are gated at runtime to the prod
+      hosts so dev/staging never send data to Meta. Exact hostname equality
+      (not substring) — staging hosts contain "vocabmine.com". */}
+  <script is:inline define:vars={{ META_PIXEL_ID }}>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    if (['vocabmine.com', 'www.vocabmine.com'].includes(location.hostname)) {
+      fbq('init', META_PIXEL_ID);
+      fbq('track', 'PageView');
+    }
+  </script>
+  <noscript>
+    <img height="1" width="1" style="display:none"
+      src={`https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`} alt="" />
+  </noscript>
 </head>
 <body class:list={[{ 'embed-app': embedMode }]}>
   {!embedMode && <Nav currentPage={currentPage} />}
