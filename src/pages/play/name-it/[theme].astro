@@ -1,0 +1,488 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { APP_REGISTER_URL, SITE_NAME } from '../../../consts';
+import { NAME_IT, THEME_DEFAULT, THEMES, type NameItCreative } from '../../../lib/name-it';
+
+/**
+ * "Name It" quiz bridge page for paid Meta video-ad traffic (one static page
+ * per theme). The ad asks "Can you name these 4 things?"; this page continues
+ * the game — tap each object to reveal the word + IPA + clue, self-tally, then
+ * hand off to signup with a message-matched payoff.
+ *
+ * Static build → one page per theme via getStaticPaths(). Today there is a
+ * single creative per theme, so we render THEME_DEFAULT[theme] server-side.
+ * The client script only reads the utm_ params and fbclid at runtime to build
+ * the signup deep link — it does NOT read `?v=` or swap the rendered creative.
+ *
+ * When a theme gains a second creative, DON'T add a client-side `?v=` swap
+ * (that flashes the default before swapping). Instead enumerate the creatives
+ * in getStaticPaths() so each creative pre-renders its own page and the SSR
+ * output already matches the ad.
+ */
+export async function getStaticPaths() {
+  return THEMES.map((theme) => ({
+    params: { theme },
+    props: { creative: NAME_IT[THEME_DEFAULT[theme]] },
+  }));
+}
+
+interface Props {
+  creative: NameItCreative;
+}
+
+const { creative } = Astro.props;
+const theme = creative.theme;
+
+const title = `${creative.adLine} — ${SITE_NAME}`;
+const description =
+  'Fluent at work, blank at home? Play the 30-second everyday-English quiz, then close the gap with Vocab Mine.';
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  canonicalPath={`/play/name-it/${theme}/`}
+  noindex={true}
+>
+  <section class="nameit" data-theme-name={theme}>
+    <div class="container nameit__inner">
+      <!-- Hero -->
+      <header class="nameit__hero">
+        <span class="nameit__eyebrow">30-second quiz</span>
+        <h1 class="nameit__title">{creative.adLine}</h1>
+        <p class="nameit__subline">
+          Fluent at work, blank at home? Tap each one — no peeking. Then see how you did.
+        </p>
+      </header>
+
+      <!-- Quiz cards -->
+      <div class="nameit__grid" role="list">
+        {
+          creative.items.map((item, i) => (
+            <div class="nameit-card" role="listitem" data-card data-index={i}>
+              <button type="button" class="nameit-card__reveal" data-reveal aria-expanded="false">
+                <img
+                  class="nameit-card__img"
+                  src={`/play/${theme}/${item.image}`}
+                  width="600"
+                  height="400"
+                  alt={`Photo of a ${item.word}`}
+                  loading={i < 2 ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+                <span class="nameit-card__hint">
+                  <span class="nameit-card__hint-num">{i + 1}</span>
+                  Tap to reveal
+                </span>
+              </button>
+              <div class="nameit-card__answer" data-answer hidden>
+                <p class="nameit-card__word">{item.word}</p>
+                <p class="nameit-card__ipa">{item.ipa}</p>
+                <p class="nameit-card__clue">{item.clue}</p>
+                <div class="nameit-card__tally" role="group" aria-label="Did you know this word?">
+                  <button type="button" class="nameit-tally" data-tally="knew">
+                    I knew it
+                  </button>
+                  <button type="button" class="nameit-tally" data-tally="missed">
+                    Missed it
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- Payoff (revealed after all four cards are opened) -->
+      <div class="nameit__payoff" data-payoff hidden>
+        <p class="nameit__payoff-text" data-payoff-text>
+          Even fluent speakers miss about 1 in 3 of these everyday words — exactly the gap {SITE_NAME} closes.
+        </p>
+        <a
+          class="btn btn--accent btn--large nameit__cta"
+          data-signup-link
+          data-ga-cta="play_name_it_signup"
+          data-ga-location={`play_name_it_${theme}`}
+          href={APP_REGISTER_URL}
+        >
+          Start free
+        </a>
+        <p class="nameit__payoff-sub">Free to start · No credit card · 5-minute setup</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Persistent mobile sticky CTA (one button only, not a form) -->
+  <div class="nameit-sticky" data-sticky hidden>
+    <a
+      class="btn btn--accent nameit-sticky__btn"
+      data-signup-link
+      data-ga-cta="play_name_it_signup"
+      data-ga-location={`play_name_it_${theme}`}
+      href={APP_REGISTER_URL}
+    >
+      Start free
+    </a>
+  </div>
+
+  <script is:inline define:vars={{ theme, signupBase: APP_REGISTER_URL }}>
+    (function () {
+      // --- A3: cross-domain attribution baton pass ---------------------------
+      // Forward the ad's UTM/click identifiers onto every signup link so the
+      // app-side signup credits the ad, even though the app lives on a
+      // different domain. We deliberately do NOT forward _fbc/_fbp: those are
+      // registrable-domain (.vocabmine.com) cookies the app's own pixel on
+      // app.vocabmine.com already reads, so passing them as URL params is dead
+      // payload.
+      function buildSignupQuery() {
+        var incoming = new URLSearchParams(window.location.search);
+        var forward = new URLSearchParams();
+        incoming.forEach(function (value, key) {
+          var lower = key.toLowerCase();
+          if (lower.indexOf('utm_') === 0 || lower === 'fbclid') {
+            forward.set(key, value);
+          }
+        });
+        forward.set('ref', 'name-it-' + theme);
+        return forward.toString();
+      }
+
+      var query = buildSignupQuery();
+      document.querySelectorAll('a[data-signup-link]').forEach(function (link) {
+        var base = link.getAttribute('href') || signupBase;
+        link.setAttribute('href', base + (base.indexOf('?') >= 0 ? '&' : '?') + query);
+      });
+
+      // --- Quiz interactivity ------------------------------------------------
+      var cards = Array.prototype.slice.call(document.querySelectorAll('[data-card]'));
+      var totalCards = cards.length;
+      var revealed = new Array(totalCards).fill(false);
+      var tally = new Array(totalCards).fill(null); // 'knew' | 'missed' | null
+      var stickyEl = document.querySelector('[data-sticky]');
+      var payoffEl = document.querySelector('[data-payoff]');
+      var payoffTextEl = document.querySelector('[data-payoff-text]');
+      var completed = false;
+
+      function revealedCount() {
+        return revealed.reduce(function (sum, r) {
+          return sum + (r ? 1 : 0);
+        }, 0);
+      }
+
+      function missedCount() {
+        return tally.reduce(function (sum, t) {
+          return sum + (t === 'missed' ? 1 : 0);
+        }, 0);
+      }
+
+      function taggedCount() {
+        return tally.reduce(function (sum, t) {
+          return sum + (t ? 1 : 0);
+        }, 0);
+      }
+
+      function showSticky() {
+        if (stickyEl) stickyEl.hidden = false;
+      }
+
+      function updatePayoffText() {
+        if (!payoffTextEl) return;
+        // Use the self-tally when the player has rated at least one card;
+        // otherwise fall back to the generic, non-judgmental framing.
+        if (taggedCount() > 0) {
+          var missed = missedCount();
+          var noun = missed === 1 ? 'word' : 'words';
+          payoffTextEl.textContent =
+            'You blanked on ' +
+            missed +
+            ' of ' +
+            totalCards +
+            '. Even fluent speakers miss about 1 in 3 of these everyday ' +
+            noun +
+            ' — exactly the gap Vocab Mine closes.';
+        }
+      }
+
+      function onComplete() {
+        if (completed) return;
+        completed = true;
+        if (payoffEl) {
+          payoffEl.hidden = false;
+          updatePayoffText();
+        }
+        showSticky();
+        // Optional Meta custom event — guarded so it no-ops off prod hosts
+        // where fbq was never initialised.
+        if (typeof window.fbq === 'function') {
+          try {
+            window.fbq('trackCustom', 'NameItPlayed', { theme: theme });
+          } catch (err) {
+            /* never let analytics break the page */
+          }
+        }
+      }
+
+      cards.forEach(function (card, index) {
+        var revealBtn = card.querySelector('[data-reveal]');
+        var answer = card.querySelector('[data-answer]');
+        if (revealBtn && answer) {
+          revealBtn.addEventListener('click', function () {
+            if (!revealed[index]) {
+              revealed[index] = true;
+              card.classList.add('is-revealed');
+              answer.hidden = false;
+              revealBtn.setAttribute('aria-expanded', 'true');
+              showSticky(); // reveal on first tap
+              if (revealedCount() === totalCards) onComplete();
+            }
+          });
+        }
+
+        var tallyBtns = card.querySelectorAll('[data-tally]');
+        tallyBtns.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            tally[index] = btn.getAttribute('data-tally');
+            tallyBtns.forEach(function (other) {
+              other.classList.toggle('is-selected', other === btn);
+              other.setAttribute('aria-pressed', String(other === btn));
+            });
+            updatePayoffText();
+          });
+        });
+      });
+
+      // Also reveal the sticky CTA once the player scrolls, even before any tap.
+      var stickyShownOnScroll = false;
+      window.addEventListener(
+        'scroll',
+        function () {
+          if (stickyShownOnScroll) return;
+          if (window.scrollY > 240) {
+            stickyShownOnScroll = true;
+            showSticky();
+          }
+        },
+        { passive: true },
+      );
+    })();
+  </script>
+
+  <style>
+    .nameit {
+      padding: 40px 0 120px;
+      background: var(--color-bg);
+    }
+    .nameit__inner {
+      max-width: 760px;
+    }
+
+    /* Hero */
+    .nameit__hero {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .nameit__eyebrow {
+      display: inline-block;
+      background: var(--color-primary-light);
+      color: var(--color-primary-on-light);
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      margin-bottom: 16px;
+    }
+    .nameit__title {
+      font-size: clamp(1.75rem, 6vw, 2.5rem);
+      line-height: 1.15;
+      margin: 0 0 12px;
+      color: var(--color-text);
+    }
+    .nameit__subline {
+      color: var(--color-text-secondary);
+      font-size: 1.0625rem;
+      max-width: 30rem;
+      margin: 0 auto;
+    }
+
+    /* Grid: single column on mobile, two on wider screens */
+    .nameit__grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 560px) {
+      .nameit__grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Card */
+    .nameit-card {
+      background: var(--color-bg-alt);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    :global([data-theme='dark']) .nameit-card {
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .nameit-card__reveal {
+      position: relative;
+      display: block;
+      width: 100%;
+      padding: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font: inherit;
+      color: inherit;
+    }
+    .nameit-card__img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 3 / 2;
+      object-fit: cover;
+    }
+    .nameit-card__hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(11, 20, 55, 0.42);
+      transition: background 0.2s, opacity 0.2s;
+    }
+    .nameit-card__reveal:hover .nameit-card__hint {
+      background: rgba(11, 20, 55, 0.55);
+    }
+    .nameit-card__hint-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.22);
+      font-size: 0.85rem;
+    }
+    .nameit-card.is-revealed .nameit-card__hint {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Answer */
+    .nameit-card__answer {
+      padding: 16px 18px 18px;
+      text-align: center;
+    }
+    .nameit-card__word {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--color-text);
+      margin: 0 0 2px;
+    }
+    .nameit-card__ipa {
+      color: var(--color-primary);
+      font-size: 0.95rem;
+      margin: 0 0 6px;
+    }
+    .nameit-card__clue {
+      color: var(--color-text-secondary);
+      font-size: 0.95rem;
+      margin: 0 0 14px;
+    }
+    .nameit-card__tally {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    .nameit-tally {
+      flex: 1;
+      max-width: 130px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      background: var(--color-bg);
+      color: var(--color-text-secondary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    :global([data-theme='dark']) .nameit-tally {
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+    .nameit-tally:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+    .nameit-tally.is-selected {
+      border-color: var(--color-primary);
+      background: var(--color-primary-light);
+      color: var(--color-primary-on-light);
+    }
+
+    /* Payoff */
+    .nameit__payoff {
+      margin-top: 32px;
+      text-align: center;
+      background: var(--color-bg-alt);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+    }
+    .nameit__payoff-text {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--color-text);
+      max-width: 34rem;
+      margin: 0 auto 20px;
+      line-height: 1.4;
+    }
+    .nameit__cta {
+      width: 100%;
+      max-width: 320px;
+    }
+    .nameit__payoff-sub {
+      color: var(--color-text-secondary);
+      font-size: 0.85rem;
+      margin: 14px 0 0;
+    }
+
+    /* Mobile sticky CTA bar */
+    .nameit-sticky {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 40;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+      background: var(--color-bg);
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 -4px 20px rgba(11, 20, 55, 0.08);
+    }
+    :global([data-theme='dark']) .nameit-sticky {
+      border-top-color: rgba(255, 255, 255, 0.1);
+    }
+    .nameit-sticky__btn {
+      width: 100%;
+    }
+    /* On desktop the inline payoff CTA is enough; the sticky bar is mobile-only. */
+    @media (min-width: 768px) {
+      .nameit-sticky {
+        display: none;
+      }
+      .nameit {
+        padding-bottom: 80px;
+      }
+    }
+  </style>
+</BaseLayout>
