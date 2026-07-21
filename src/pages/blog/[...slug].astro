@@ -5,7 +5,7 @@ import CollectionCta from '../../components/CollectionCta.astro';
 import Pullquote from '../../components/Pullquote.astro';
 import VideoEmbed from '../../components/VideoEmbed.astro';
 import {
-  fetchArticleById,
+  fetchArticleDetails,
   fetchPublishedArticles,
   type ArticleDetail,
 } from '../../lib/blog-articles';
@@ -23,9 +23,7 @@ import { renderBlogBody } from '../../lib/render-blog-body';
  */
 export async function getStaticPaths() {
   const summaries = await fetchPublishedArticles();
-  const details = await Promise.all(
-    summaries.map((s) => fetchArticleById(s.id)),
-  );
+  const details = await fetchArticleDetails(summaries.map((s) => s.id));
   return details.map((article) => ({
     params: { slug: article.slug },
     props: { article },
