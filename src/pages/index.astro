@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import FinalCta from '../components/FinalCta.astro';
-import { SITE_NAME, APP_URL } from '../consts';
+import { SITE_NAME, APP_REGISTER_URL } from '../consts';
 ---
 
 <BaseLayout
@@ -21,7 +21,7 @@ import { SITE_NAME, APP_URL } from '../consts';
         <h1>Master English Vocabulary with <span class="accent">AI</span></h1>
         <p class="hero__sub">Add words, learn meanings, practice with exercise and master vocabulary faster.</p>
         <div class="hero__actions">
-          <a href={APP_URL} class="btn btn--primary btn--large" data-ga-cta="get_started_free" data-ga-location="hero">Get Started Free</a>
+          <a href={APP_REGISTER_URL} class="btn btn--primary btn--large" data-ga-cta="get_started_free" data-ga-location="hero">Get Started Free</a>
           <a href="/#how-it-works" class="btn btn--demo btn--large" data-ga-cta="see_demo" data-ga-location="hero">See Demo</a>
         </div>
       </div>
