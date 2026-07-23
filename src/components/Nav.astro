@@ -1,5 +1,5 @@
 ---
-import { SITE_NAME, APP_URL } from '../consts';
+import { SITE_NAME, APP_URL, APP_REGISTER_URL } from '../consts';
 
 interface Props {
   currentPage?: string;
@@ -56,7 +56,7 @@ const LOGIN_URL = `${APP_URL}/login`;
         </svg>
       </button>
       <a href={LOGIN_URL} class="nav__login">Login</a>
-      <a href={APP_URL} class="btn btn--primary nav__cta" data-ga-cta="get_started_free" data-ga-location="nav">Get started</a>
+      <a href={APP_REGISTER_URL} class="btn btn--primary nav__cta" data-ga-cta="get_started_free" data-ga-location="nav">Get started</a>
     </div>
     <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation">
       <span class="nav__toggle-bar"></span>
